@@ -1,13 +1,13 @@
 ---
 title: Configuration
-description: DeerFlow App is configured through two files and a set of environment variables. This page covers the application-level configuration that most operators need to set up before deploying.
+description: Application is configured through two files and a set of environment variables. This page covers the application-level configuration that most operators need to set up before deploying.
 ---
 
 import { Callout, Cards, Tabs } from "nextra/components";
 
 # Configuration
 
-DeerFlow App is configured through two files and a set of environment variables. This page covers the application-level configuration that most operators need to set up before deploying.
+Application is configured through two files and a set of environment variables. This page covers the application-level configuration that most operators need to set up before deploying.
 
 ## Configuration files
 
@@ -99,7 +99,7 @@ models:
     supports_vision: false
 ```
 
-Install Ollama provider: `cd backend && uv add 'deerflow-harness[ollama]'`
+Install Ollama provider: `cd backend && uv add 'libra-harness[ollama]'`
 
 <Callout type="warning">
   Use <code>langchain_ollama:ChatOllama</code> (not the OpenAI-compatible
@@ -143,7 +143,7 @@ sandbox:
   idle_timeout: 600
 ```
 
-Install: `cd backend && uv add 'deerflow-harness[aio-sandbox]'`
+Install: `cd backend && uv add 'libra-harness[aio-sandbox]'`
 
   </Tabs.Tab>
   <Tabs.Tab>
@@ -184,12 +184,12 @@ tools:
 
 ### Thread state persistence (checkpointer)
 
-By default, DeerFlow uses an SQLite checkpointer for thread state persistence:
+By default, Libra uses an SQLite checkpointer for thread state persistence:
 
 ```yaml
 checkpointer:
   type: sqlite
-  connection_string: checkpoints.db # stored in backend/.deer-flow/
+  connection_string: checkpoints.db # stored in backend/.scideer/
 ```
 
 For production deployments with multiple processes:
@@ -197,7 +197,7 @@ For production deployments with multiple processes:
 ```yaml
 checkpointer:
   type: postgres
-  connection_string: postgresql://user:password@localhost:5432/deerflow
+  connection_string: postgresql://user:password@localhost:5432/libra
 ```
 
 Install PostgreSQL support: `cd backend && uv add langgraph-checkpoint-postgres psycopg[binary] psycopg-pool`

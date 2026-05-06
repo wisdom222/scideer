@@ -1,19 +1,19 @@
 ---
-title: DeerFlow 应用
-description: DeerFlow 应用是 DeerFlow 生产体验的参考实现。它将 Harness 运行时、基于 Web 的对话工作区、API Gateway 和反向代理组合成一个可部署的完整系统。
+title: 应用
+description: 应用是 Libra 生产体验的参考实现。它将 Harness 运行时、基于 Web 的对话工作区、API Gateway 和反向代理组合成一个可部署的完整系统。
 ---
 
 import { Callout, Cards } from "nextra/components";
 
-# DeerFlow 应用
+# 应用
 
 <Callout type="info" emoji="🚀">
-  DeerFlow 应用是构建在 DeerFlow Harness 之上的完整 Super Agent
+  应用是构建在 Harness 之上的完整 Super Agent
   应用。它将运行时能力打包成一个可部署的产品，包含 Web 界面、API Gateway
   和运维工具。
 </Callout>
 
-DeerFlow 应用是 DeerFlow 生产体验的参考实现。它将 Harness 运行时、基于 Web 的对话工作区、API Gateway 和反向代理组合成一个可部署的完整系统。
+应用是 Libra 生产体验的参考实现。它将 Harness 运行时、基于 Web 的对话工作区、API Gateway 和反向代理组合成一个可部署的完整系统。
 
 ## 应用提供什么
 
@@ -29,7 +29,7 @@ DeerFlow 应用是 DeerFlow 生产体验的参考实现。它将 Harness 运行�
 
 ## 架构
 
-DeerFlow 应用以四个服务的形式运行，通过单个 nginx 反向代理提供：
+应用以四个服务的形式运行，通过单个 nginx 反向代理提供：
 
 ```
                 ┌──────────────────┐
@@ -47,14 +47,14 @@ DeerFlow 应用以四个服务的形式运行，通过单个 nginx 反向代理�
                             ▼
                   ┌──────────────────────┐
                   │  LangGraph :2024     │
-                  │  (DeerFlow Harness)  │
+                  │  (Harness)  │
                   └──────────────────────┘
 ```
 
 - **nginx**：路由请求——`/api/*` 到 Gateway，LangGraph 流式端点到 LangGraph，其余到前端。
 - **前端**（Next.js + React）：浏览器界面，与 Gateway 和 LangGraph 通信。
 - **Gateway**（FastAPI）：处理 API 操作——模型列表、Agent CRUD、记忆、扩展管理、文件上传。
-- **LangGraph**：DeerFlow Harness 运行时，管理线程状态、Agent 执行和流式传输。
+- **LangGraph**：Harness 运行时，管理线程状态、Agent 执行和流式传输。
 
 ## 技术栈
 
@@ -62,7 +62,7 @@ DeerFlow 应用以四个服务的形式运行，通过单个 nginx 反向代理�
 | ------------ | ------------------------------------------------------- |
 | 前端         | Next.js 16、React 19、TypeScript、pnpm                  |
 | Gateway      | FastAPI、Python 3.12、uvicorn                           |
-| Agent 运行时 | LangGraph、LangChain、DeerFlow Harness                  |
+| Agent 运行时 | LangGraph、LangChain、Harness                  |
 | 反向代理     | nginx                                                   |
 | 状态持久化   | LangGraph Server（默认）+ 可选 SQLite/PostgreSQL 检查点 |
 
