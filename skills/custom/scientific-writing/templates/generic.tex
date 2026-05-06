@@ -1,0 +1,56 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+\usepackage{natbib}
+\usepackage[margin=1in]{geometry}
+
+\graphicspath{{figures/}}
+
+\title{ {{TITLE}} }
+\author{ {{AUTHORS}} }
+\date{ {{DATE}} }
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+% TODO_ABSTRACT: write a 4-6 sentence abstract.
+% Stance hint from skill input: {{STANCE_HINT}}
+% Sources: outputs/repro-*/report.md (if reproduction was performed),
+%          outputs/slr-*.md (if literature review was performed).
+\end{abstract}
+
+\section{Introduction}
+% TODO_INTRO: motivate the problem; cite key references via \citep{key}
+%             (key must exist in references.bib). If references.bib is empty,
+%             write descriptive prose without citations and add inline
+%             "% needs citation" markers.
+
+\section{Related Work}
+% TODO_RELATED: synthesize from outputs/slr-*.md.
+%               Use \citep{key} for inline cites; key must exist in references.bib.
+%               If references.bib is empty, prose only with "% needs citation".
+
+\section{Method}
+% TODO_METHOD: describe approach;
+%              source: outputs/repro-*/report.md (Method section).
+%              Include any scale-down decisions explicitly.
+
+\section{Experiments}
+% TODO_EXPERIMENTS: present quantitative results.
+%                   Sources: outputs/repro-*/comparison.json (paper_value, our_value, delta)
+%                            workspace/analysis-*/*.csv (if data-analysis was performed).
+%                   Use the figure-include lines below; uncomment ones you cite.
+
+% Figure includes (uncomment as you write Experiments prose):
+{{FIGURE_INCLUDES}}
+
+\section{Conclusion}
+% TODO_CONCLUSION: 1-paragraph summary of contribution + limitations + future work.
+
+{{BIBLIOGRAPHY_LINE}}
+
+\end{document}

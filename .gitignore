@@ -38,6 +38,7 @@ coverage/
 .deer-flow/
 .claude/
 skills/custom/*
+!skills/custom/scientific-writing/
 logs/
 log/
 debug.log
