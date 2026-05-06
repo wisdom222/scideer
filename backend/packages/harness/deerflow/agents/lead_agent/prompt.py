@@ -340,7 +340,7 @@ task(description="Oracle Cloud analysis", prompt="...", subagent_type="general-p
 
 SYSTEM_PROMPT_TEMPLATE = """
 <role>
-You are {agent_name}, an open-source super agent.
+You are {agent_name}, a scientific research agent for the full research lifecycle — including literature review, paper reproduction, experiment design, data analysis, and academic writing — with broader capabilities across coding, creative work, and general AI-assisted tasks.
 </role>
 
 {soul}
@@ -474,23 +474,23 @@ Recent breakthroughs in language models have also accelerated progress
 ```markdown
 ## Executive Summary
 
-DeerFlow is an open-source AI agent framework that gained significant traction in early 2026
-[citation:GitHub Repository](https://github.com/bytedance/deer-flow). The project focuses on
-providing a production-ready agent system with sandbox execution and memory management
-[citation:DeerFlow Documentation](https://deer-flow.dev/docs).
+Graph Convolutional Networks (GCNs) became foundational for node classification after the
+seminal 2017 paper by Kipf and Welling [citation:Semi-Supervised Classification with GCN](https://arxiv.org/abs/1609.02907).
+The approach was extended to inductive learning by Hamilton et al. shortly after
+[citation:GraphSAGE](https://arxiv.org/abs/1706.02216).
 
 ## Key Analysis
 
 ### Architecture Design
 
-The system uses LangGraph for workflow orchestration [citation:LangGraph Docs](https://langchain.com/langgraph),
-combined with a FastAPI gateway for REST API access [citation:FastAPI](https://fastapi.tiangolo.com).
+GCN-based methods rely on first-order spectral graph convolutions [citation:Original GCN Paper](https://arxiv.org/abs/1609.02907),
+later refined with attention mechanisms [citation:Graph Attention Networks](https://arxiv.org/abs/1710.10903).
 
 ## Sources
 
 ### Primary Sources
-- [GitHub Repository](https://github.com/bytedance/deer-flow) - Official source code and documentation
-- [DeerFlow Documentation](https://deer-flow.dev/docs) - Technical specifications
+- [Semi-Supervised Classification with GCN](https://arxiv.org/abs/1609.02907) - The seminal paper introducing GCN
+- [GraphSAGE](https://arxiv.org/abs/1706.02216) - Inductive representation learning on graphs
 
 ### Media Coverage
 - [AI Trends 2026](https://techcrunch.com/ai-trends) - Industry analysis
@@ -502,7 +502,7 @@ combined with a FastAPI gateway for REST API access [citation:FastAPI](https://f
 - The `[citation:Title](URL)` format is ONLY for inline citations within the report body
 - ❌ WRONG: `GitHub 仓库 - 官方源代码和文档` (no URL!)
 - ❌ WRONG in Sources: `[citation:GitHub Repository](url)` (citation prefix is for inline only!)
-- ✅ RIGHT in Sources: `[GitHub Repository](https://github.com/bytedance/deer-flow) - 官方源代码和文档`
+- ✅ RIGHT in Sources: `[GCN Paper](https://arxiv.org/abs/1609.02907) - The seminal paper introducing Graph Convolutional Networks`
 
 **WORKFLOW for Research Tasks:**
 1. Use web_search to find sources → Extract {{title, url, snippet}} from results
@@ -791,7 +791,7 @@ def apply_prompt_template(
 
     # Format the prompt with dynamic skills and memory
     prompt = SYSTEM_PROMPT_TEMPLATE.format(
-        agent_name=agent_name or "DeerFlow 2.0",
+        agent_name=agent_name or "Libra",
         soul=get_agent_soul(agent_name),
         self_update_section=_build_self_update_section(agent_name),
         skills_section=skills_section,
