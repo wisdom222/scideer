@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <!-- 4 stars only, no glow, no connections -->
+  <g fill="currentColor">
+    <circle cx="100" cy="40"  r="8"/>
+    <circle cx="40"  cy="100" r="6"/>
+    <circle cx="160" cy="100" r="6"/>
+    <circle cx="100" cy="160" r="6"/>
+  </g>
+
+  <!-- Center L -->
+  <text x="100" y="118"
+        text-anchor="middle"
+        font-family="Georgia, 'Times New Roman', serif"
+        font-size="56"
+        font-weight="500"
+        fill="currentColor">L</text>
+</svg>
