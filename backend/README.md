@@ -1,3 +1,12 @@
+# Libra Backend (extends DeerFlow 2.0 harness)
+
+This directory contains the Libra backend, which extends DeerFlow 2.0's
+harness with scientific-research-specific skills, the sci-pi orchestrator
+subagent, and Semantic Scholar MCP integration. The original DeerFlow
+backend documentation follows below for harness-internals reference.
+
+---
+
 # DeerFlow Backend
 
 DeerFlow is a LangGraph-based AI super agent with sandbox execution, persistent memory, and extensible tool integration. The backend enables AI agents to execute code, browse the web, manage files, delegate tasks to subagents, and retain context across conversations - all in isolated, per-thread environments.
