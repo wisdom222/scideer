@@ -29,7 +29,7 @@ export function Hero({ className }: { className?: string }) {
         />
       </div>
       <FlickeringGrid
-        className="absolute inset-0 z-0 translate-y-8 mask-[url(/images/deer.svg)] mask-size-[100vw] mask-center mask-no-repeat md:mask-size-[72vh]"
+        className="absolute inset-0 z-0 translate-y-8 mask-[url(/images/libra-logo.svg)] mask-size-[100vw] mask-center mask-no-repeat md:mask-size-[72vh]"
         squareSize={4}
         gridGap={4}
         color={"white"}
@@ -40,22 +40,16 @@ export function Hero({ className }: { className?: string }) {
         <h1 className="flex items-center gap-2 text-4xl font-bold md:text-6xl">
           <WordRotate
             words={[
-              "Deep Research",
-              "Collect Data",
-              "Analyze Data",
-              "Generate Webpages",
-              "Vibe Coding",
-              "Generate Slides",
-              "Generate Images",
-              "Generate Podcasts",
-              "Generate Videos",
-              "Generate Songs",
-              "Organize Emails",
-              "Do Anything",
-              "Learn Anything",
+              "Survey Literature",
+              "Reproduce Papers",
+              "Design Experiments",
+              "Visualize Data",
+              "Write LaTeX Papers",
+              "Build Citation Graphs",
+              "Discover Research",
             ]}
           />{" "}
-          <div>with DeerFlow</div>
+          <div>with Libra</div>
         </h1>
         {env.NEXT_PUBLIC_STATIC_WEBSITE_ONLY && (
           <a
@@ -70,17 +64,15 @@ export function Hero({ className }: { className?: string }) {
           </a>
         )}
         <p className="text-muted-foreground mt-8 scale-105 text-center text-2xl text-shadow-sm">
-          An open-source SuperAgent harness that researches, codes, and creates.
-          With
+          A scientific research agent for the full research lifecycle.
           <br />
-          the help of sandboxes, memories, tools, skills and subagents, it
-          handles
+          Survey literature, reproduce papers, design experiments,
           <br />
-          different levels of tasks that could take minutes to hours.
+          and write publication-ready papers — all in one workspace.
         </p>
         <Link href="/workspace">
           <Button className="size-lg mt-8 scale-108" size="lg">
-            <span className="text-md">Get Started with 2.0</span>
+            <span className="text-md">Start Researching</span>
             <ChevronRightIcon className="size-4" />
           </Button>
         </Link>

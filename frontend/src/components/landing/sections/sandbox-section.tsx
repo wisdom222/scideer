@@ -15,9 +15,9 @@ export function SandboxSection({ className }: { className?: string }) {
       title="Agent Runtime Environment"
       subtitle={
         <p>
-          We give DeerFlow a &quot;computer&quot;, which can execute commands,
-          manage files, and run long tasks — all in a secure Docker-based
-          sandbox
+          Libra runs experiments in isolated Docker-based sandboxes, so paper
+          reproductions and analysis code stay reproducible and secure — with
+          full control over commands, files, and long-running tasks.
         </p>
       }
     >
