@@ -117,13 +117,13 @@ export function RecentChatList() {
 
   const handleShare = useCallback(
     async (thread: AgentThread) => {
-      // Always use Vercel URL for sharing so others can access
-      const VERCEL_URL = "https://deer-flow-v2.vercel.app";
+      // Use deployed server URL for sharing so others can access
+      const SHARE_BASE_URL = "http://43.156.100.148:2026";
       const isLocalhost =
         window.location.hostname === "localhost" ||
         window.location.hostname === "127.0.0.1";
-      // On localhost: use Vercel URL; On production: use current origin
-      const baseUrl = isLocalhost ? VERCEL_URL : window.location.origin;
+      // On localhost: use deployed URL; On production: use current origin
+      const baseUrl = isLocalhost ? SHARE_BASE_URL : window.location.origin;
       const shareUrl = `${baseUrl}${pathOfThread(thread)}`;
       try {
         await navigator.clipboard.writeText(shareUrl);
