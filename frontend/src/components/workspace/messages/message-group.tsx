@@ -702,44 +702,59 @@ interface CoTToolCallStep extends GenericCoTStep<"toolCall"> {
 type CoTStep = CoTReasoningStep | CoTToolCallStep;
 
 function convertToSteps(messages: Message[]): CoTStep[] {
+  // step.id 必须在一次渲染内全局唯一，否则 React 报 duplicate key。
+  // 上游 messages 数组在 LangGraph values+messages 双流模式下可能含重复 AIMessage
+  // （同一 message.id 出现 ≥2 次），因此这里加命名空间前缀 + 显式去重做防御。
   const steps: CoTStep[] = [];
-  for (const message of messages) {
-    if (message.type === "ai") {
-      const reasoning = extractReasoningContentFromMessage(message);
-      if (reasoning) {
-        const step: CoTReasoningStep = {
-          id: message.id,
+  const seenStepIds = new Set<string>();
+  for (const [messageIndex, message] of messages.entries()) {
+    if (message.type !== "ai") {
+      continue;
+    }
+    const messageKey = message.id ?? `msg-${messageIndex}`;
+    const reasoning = extractReasoningContentFromMessage(message);
+    if (reasoning) {
+      const stepId = `${messageKey}:reasoning`;
+      if (!seenStepIds.has(stepId)) {
+        seenStepIds.add(stepId);
+        steps.push({
+          id: stepId,
           messageId: message.id,
           type: "reasoning",
           reasoning,
-        };
-        steps.push(step);
+        });
       }
-      for (const tool_call of message.tool_calls ?? []) {
-        if (tool_call.name === "task") {
-          continue;
-        }
-        const step: CoTToolCallStep = {
-          id: tool_call.id,
-          messageId: message.id,
-          type: "toolCall",
-          name: tool_call.name,
-          args: tool_call.args,
-        };
-        const toolCallId = tool_call.id;
-        if (toolCallId) {
-          const toolCallResult = findToolCallResult(toolCallId, messages);
-          if (toolCallResult) {
-            try {
-              const json = JSON.parse(toolCallResult);
-              step.result = json;
-            } catch {
-              step.result = toolCallResult;
-            }
+    }
+    const toolCalls = message.tool_calls ?? [];
+    for (const [toolCallIndex, tool_call] of toolCalls.entries()) {
+      if (tool_call.name === "task") {
+        continue;
+      }
+      const toolCallId = tool_call.id;
+      const stepId = `${messageKey}:tool:${toolCallId ?? `idx-${toolCallIndex}`}`;
+      if (seenStepIds.has(stepId)) {
+        continue;
+      }
+      seenStepIds.add(stepId);
+      const step: CoTToolCallStep = {
+        id: stepId,
+        messageId: message.id,
+        type: "toolCall",
+        name: tool_call.name,
+        args: tool_call.args,
+      };
+      if (toolCallId) {
+        const toolCallResult = findToolCallResult(toolCallId, messages);
+        if (toolCallResult) {
+          try {
+            const json = JSON.parse(toolCallResult);
+            step.result = json;
+          } catch {
+            step.result = toolCallResult;
           }
         }
-        steps.push(step);
       }
+      steps.push(step);
     }
   }
   return steps;
