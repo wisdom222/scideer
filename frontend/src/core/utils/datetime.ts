@@ -1,17 +1,13 @@
 import { formatDistanceToNow } from "date-fns";
-import { enUS as dateFnsEnUS, zhCN as dateFnsZhCN } from "date-fns/locale";
+import { enUS as dateFnsEnUS } from "date-fns/locale";
 
 import { detectLocale, type Locale } from "@/core/i18n";
 import { getLocaleFromCookie } from "@/core/i18n/cookies";
 
-function getDateFnsLocale(locale: Locale) {
-  switch (locale) {
-    case "zh-CN":
-      return dateFnsZhCN;
-    case "en-US":
-    default:
-      return dateFnsEnUS;
-  }
+function getDateFnsLocale(_locale: Locale) {
+  // Locale is currently "en-US"-only. zhCN date-fns locale removed alongside
+  // the SUPPORTED_LOCALES clamp — re-add if bilingual UI is restored.
+  return dateFnsEnUS;
 }
 
 export function formatTimeAgo(date: Date | string | number, locale?: Locale) {

@@ -4,27 +4,13 @@ import { MonitorSmartphoneIcon, MoonIcon, SunIcon } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useMemo, type ComponentType, type SVGProps } from "react";
 
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
-import { enUS, isLocale, zhCN, type Locale } from "@/core/i18n";
 import { useI18n } from "@/core/i18n/hooks";
 import { cn } from "@/lib/utils";
 
 import { SettingsSection } from "./settings-section";
 
-const languageOptions: { value: Locale; label: string }[] = [
-  { value: "en-US", label: enUS.locale.localName },
-  { value: "zh-CN", label: zhCN.locale.localName },
-];
-
 export function AppearanceSettingsPage() {
-  const { t, locale, changeLocale } = useI18n();
+  const { t } = useI18n();
   const { theme, setTheme, systemTheme } = useTheme();
   const currentTheme = (theme ?? "system") as "system" | "light" | "dark";
 
@@ -81,32 +67,12 @@ export function AppearanceSettingsPage() {
         </div>
       </SettingsSection>
 
-      <Separator />
-
-      <SettingsSection
-        title={t.settings.appearance.languageTitle}
-        description={t.settings.appearance.languageDescription}
-      >
-        <Select
-          value={locale}
-          onValueChange={(value) => {
-            if (isLocale(value)) {
-              changeLocale(value);
-            }
-          }}
-        >
-          <SelectTrigger className="w-[220px]">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {languageOptions.map((item) => (
-              <SelectItem key={item.value} value={item.value}>
-                {item.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </SettingsSection>
+      {/*
+        Language picker removed — Libra is locked to English-only for the
+        PH6725 defence. See docs/plans/2026-05-14-libra-english-only-design.md.
+        t.settings.appearance.languageTitle / languageDescription strings are
+        retained in the en-US translation table for a quick restore.
+      */}
     </div>
   );
 }

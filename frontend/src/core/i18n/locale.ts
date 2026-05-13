@@ -1,4 +1,9 @@
-export const SUPPORTED_LOCALES = ["en-US", "zh-CN"] as const;
+// Libra is locked to English-only for the PH6725 defence. zh-CN was
+// removed from SUPPORTED_LOCALES so every Locale-typed code path narrows
+// to "en-US" at the type level. To revive bilingual UI, add "zh-CN" back
+// here, re-export zhCN from translations.ts + the two index.ts files, and
+// remove the clamp in server.ts.
+export const SUPPORTED_LOCALES = ["en-US"] as const;
 export type Locale = (typeof SUPPORTED_LOCALES)[number];
 export const DEFAULT_LOCALE: Locale = "en-US";
 
@@ -31,10 +36,6 @@ export function normalizeLocale(locale: string | null | undefined): Locale {
 
   if (isLocale(locale)) {
     return locale;
-  }
-
-  if (locale.toLowerCase().startsWith("zh")) {
-    return "zh-CN";
   }
 
   return DEFAULT_LOCALE;
