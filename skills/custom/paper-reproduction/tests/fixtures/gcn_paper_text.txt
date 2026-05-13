@@ -1,0 +1,47 @@
+Semi-Supervised Classification with Graph Convolutional Networks
+
+Thomas N. Kipf, Max Welling
+University of Amsterdam
+
+ABSTRACT
+We present a scalable approach for semi-supervised learning on graph-structured
+data that is based on an efficient variant of convolutional neural networks
+which operate directly on graphs. Code to reproduce our experiments is
+available at https://github.com/tkipf/gcn.
+
+5 EXPERIMENTS
+We train a two-layer GCN as described in Section 3.1 and evaluate prediction
+accuracy on a test set of 1,000 labeled examples.
+
+5.1 EXPERIMENTAL SET-UP
+We trained our models for a maximum of 200 epochs (training iterations) using
+Adam (Kingma & Ba, 2015) with a learning rate of 0.01 and early stopping with
+a window size of 10. We initialize weights using the initialization described
+in Glorot & Bengio (2010) and accordingly (row-)normalize input feature
+vectors. For the citation network datasets, we use 16 hidden units and have
+trained for a maximum of 200 epochs. We chose dropout rate of 0.5 and L2
+regularization factor with weight decay of 5e-4.
+
+Datasets used: Cora, Citeseer, Pubmed.
+
+6 RESULTS
+6.1 SEMI-SUPERVISED NODE CLASSIFICATION
+Results are summarized in Table 2. Reported numbers denote classification
+accuracy in percent.
+
+Table 2: Summary of results in terms of classification accuracy (in percent).
+
+Method               Cora    Citeseer   Pubmed
+ManiReg              59.5    60.1       70.7
+SemiEmb              59.0    59.6       71.7
+LP                   68.0    45.3       63.0
+DeepWalk             67.2    43.2       65.3
+ICA                  75.1    69.1       73.9
+Planetoid            75.7    64.7       77.2
+GCN (this paper)     81.5    70.3       79.0
+GCN (rand. splits)   80.1    67.9       78.9
+
+7 DISCUSSION
+Our experiments demonstrate that the proposed graph convolutional network
+model is capable of efficiently encoding both graph structure and node
+features in a way that is useful for semi-supervised classification.
