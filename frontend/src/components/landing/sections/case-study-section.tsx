@@ -82,7 +82,7 @@ export function CaseStudySection({ className }: { className?: string }) {
       title="Case Studies"
       subtitle="See how Libra accelerates the full research lifecycle"
     >
-      <div className="container-md mt-8 grid grid-cols-1 gap-4 px-4 md:grid-cols-2 md:px-20 lg:grid-cols-3">
+      <div className="container-md mt-8 grid grid-cols-1 gap-4 px-4 md:grid-cols-2 md:px-8 lg:grid-cols-3">
         {CASE_STUDIES.map(({ threadId, title, description, Icon, hue }) => (
           <Link
             key={threadId}
@@ -90,7 +90,7 @@ export function CaseStudySection({ className }: { className?: string }) {
             target="_blank"
             rel="noopener noreferrer"
           >
-            <Card className="group/card relative h-64 overflow-hidden">
+            <Card className="group/card relative h-72 overflow-hidden">
               {/* Gradient wash — keeps the warm-minimal palette */}
               <div
                 className="absolute inset-0 z-0 transition-transform duration-300 group-hover/card:scale-105"
@@ -105,9 +105,9 @@ export function CaseStudySection({ className }: { className?: string }) {
               {/* Title / description tray — same slide-up reveal as before */}
               <div
                 className={cn(
-                  "absolute right-0 bottom-0 left-0 z-[2] flex h-full w-full translate-y-[calc(100%-60px)] flex-col items-center",
+                  "absolute right-0 bottom-0 left-0 z-[2] flex h-full w-full translate-y-[calc(100%-76px)] flex-col items-center",
                   "transition-all duration-300",
-                  "group-hover/card:translate-y-[calc(100%-128px)]",
+                  "group-hover/card:translate-y-[calc(100%-152px)]",
                 )}
               >
                 <div
@@ -118,10 +118,10 @@ export function CaseStudySection({ className }: { className?: string }) {
                   }}
                 >
                   <div className="flex flex-col gap-2">
-                    <h3 className="flex h-14 items-center text-xl font-bold text-white text-shadow-sm">
+                    <h3 className="text-lg font-bold leading-snug text-white text-shadow-sm line-clamp-2">
                       {title}
                     </h3>
-                    <p className="overflow-hidden text-sm text-white/85 text-shadow-sm">
+                    <p className="overflow-hidden text-sm text-white/85 text-shadow-sm line-clamp-3">
                       {description}
                     </p>
                   </div>

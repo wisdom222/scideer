@@ -33,23 +33,23 @@ export function Hero({ className }: { className?: string }) {
       {/* Layer 1: Faint gold stardust (replaces the old mask) */}
       <FlickeringGrid
         className="absolute inset-0 z-0"
-        squareSize={4}
-        gridGap={4}
-        color="#e9c665"
-        maxOpacity={0.15}
-        flickerChance={0.2}
+        squareSize={3}
+        gridGap={8}
+        color="#f5e6c8"
+        maxOpacity={0.08}
+        flickerChance={0.15}
       />
 
       {/* Layer 2: Real Libra constellation overlay (inline SVG so CSS classes apply) */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 z-[1] flex items-center justify-center text-[#e9c665]"
+        className="pointer-events-none absolute top-[14%] left-1/2 z-[1] -translate-x-1/2 text-[#e9c665]"
       >
         <svg
           viewBox="0 0 200 200"
           fill="none"
           stroke="currentColor"
-          className="size-[200px] md:size-[320px] drop-shadow-[0_0_24px_rgba(233,198,101,0.35)]"
+          className="size-[160px] md:size-[240px] opacity-90 drop-shadow-[0_0_32px_rgba(233,198,101,0.5)]"
         >
           <defs>
             <filter
@@ -119,7 +119,7 @@ export function Hero({ className }: { className?: string }) {
             </div>
           </a>
         )}
-        <p className="text-muted-foreground mt-8 scale-105 text-center text-2xl text-shadow-sm">
+        <p className="text-muted-foreground mt-10 scale-105 text-center text-2xl text-shadow-sm">
           A scientific research agent for the full research lifecycle.
           <br />
           Survey literature, reproduce papers, design experiments,
@@ -128,7 +128,7 @@ export function Hero({ className }: { className?: string }) {
         </p>
         <Link href="/workspace">
           <Button
-            className="size-lg mt-8 scale-108 transition-all duration-200 hover:scale-[1.13] hover:shadow-gold-glow focus-visible:shadow-gold-glow"
+            className="size-lg mt-10 scale-108 transition-all duration-200 hover:scale-[1.13] hover:shadow-gold-glow focus-visible:shadow-gold-glow"
             size="lg"
           >
             <span className="text-md">Start Researching</span>
