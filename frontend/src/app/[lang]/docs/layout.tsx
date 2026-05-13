@@ -7,10 +7,7 @@ import { Header } from "@/components/landing/header";
 import { getLocaleByLang } from "@/core/i18n/locale";
 import "nextra-theme-docs/style.css";
 
-const i18n = [
-  { locale: "en", name: "English" },
-  { locale: "zh", name: "中文" },
-];
+const i18n = [{ locale: "en", name: "English" }];
 
 function formatPageRoute(base: string, items: PageMapItem[]): PageMapItem[] {
   return items.map((item) => {
