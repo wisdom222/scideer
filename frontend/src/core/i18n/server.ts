@@ -4,17 +4,9 @@ import { DEFAULT_LOCALE, normalizeLocale, type Locale } from "./locale";
 import { translations } from "./translations";
 
 export async function detectLocaleServer(): Promise<Locale> {
-  const cookieStore = await cookies();
-  let locale = cookieStore.get("locale")?.value;
-  if (locale !== undefined) {
-    try {
-      locale = decodeURIComponent(locale);
-    } catch {
-      // Keep raw cookie value when decoding fails.
-    }
-  }
-
-  return normalizeLocale(locale);
+  // Locked to en-US for the PH6725 defence — see
+  // docs/plans/2026-05-14-libra-english-only-design.md §1 decision #1.
+  return "en-US";
 }
 
 export async function setLocale(locale: string | Locale): Promise<Locale> {
