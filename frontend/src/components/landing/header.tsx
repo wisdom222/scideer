@@ -36,7 +36,7 @@ export async function Header({ className, homeURL, locale }: HeaderProps) {
               src="/images/libra-mark.svg"
               alt=""
               aria-hidden="true"
-              className="size-5"
+              className="size-7"
             />
             <h1 className="font-serif text-xl">Libra</h1>
           </div>

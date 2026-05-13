@@ -29,19 +29,24 @@ export function WorkspaceHeader({ className }: { className?: string }) {
       >
         {state === "collapsed" ? (
           <div className="group-has-data-[collapsible=icon]/sidebar-wrapper:-translate-y flex w-full cursor-pointer items-center justify-center">
-            <div className="text-primary block pt-1 font-serif group-hover/workspace-header:hidden">
-              L
-            </div>
+            <img
+              src="/images/libra-mark.svg"
+              alt=""
+              aria-hidden="true"
+              className="size-6 block group-hover/workspace-header:hidden"
+            />
             <SidebarTrigger className="hidden pl-2 group-hover/workspace-header:block" />
           </div>
         ) : (
           <div className="flex items-center justify-between gap-2">
             {env.NEXT_PUBLIC_STATIC_WEBSITE_ONLY === "true" ? (
-              <Link href="/" className="text-primary ml-2 font-serif">
+              <Link href="/" className="ml-2 flex items-center gap-2 text-primary font-serif">
+                <img src="/images/libra-mark.svg" alt="" aria-hidden="true" className="size-5" />
                 Libra
               </Link>
             ) : (
-              <div className="text-primary ml-2 cursor-default font-serif">
+              <div className="ml-2 flex items-center gap-2 cursor-default text-primary font-serif">
+                <img src="/images/libra-mark.svg" alt="" aria-hidden="true" className="size-5" />
                 Libra
               </div>
             )}

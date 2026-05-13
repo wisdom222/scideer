@@ -78,18 +78,6 @@ export function Hero({ className }: { className?: string }) {
             <circle className="libra-star libra-star--gamma" cx="160" cy="100" r="4.5" />
             <circle className="libra-star libra-star--sigma" cx="100" cy="160" r="4.5" />
           </g>
-          <text
-            x="100"
-            y="115"
-            textAnchor="middle"
-            fontFamily="Georgia, 'Times New Roman', serif"
-            fontSize="48"
-            fontWeight="500"
-            fill="currentColor"
-            opacity="0.85"
-          >
-            L
-          </text>
         </svg>
       </div>
       <div className="container-md relative z-10 mx-auto flex h-screen flex-col items-center justify-center">
