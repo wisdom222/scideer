@@ -177,9 +177,14 @@ export function MessageList({
   const rehypePlugins = useRehypeSplitWordsIntoSpans(thread.isLoading);
   const updateSubtask = useUpdateSubtask();
   const messages = thread.messages;
-  const groupedMessages = getMessageGroups(messages);
-  const turnUsageMessagesByGroupIndex =
-    getAssistantTurnUsageMessages(groupedMessages);
+  // 缓存分组结果：streaming 时 MessageList 每个 token 都会重渲，没有 memo
+  // 会让 getMessageGroups 每次都重新跑 O(N) 分桶逻辑（且 token-debug 步骤
+  // 涉及到 reduce 操作），白白消耗 CPU 并放大 race 下的 log 噪音。
+  const groupedMessages = useMemo(() => getMessageGroups(messages), [messages]);
+  const turnUsageMessagesByGroupIndex = useMemo(
+    () => getAssistantTurnUsageMessages(groupedMessages),
+    [groupedMessages],
+  );
   const tokenDebugSteps = useMemo(
     () => buildTokenDebugSteps(messages, t),
     [messages, t],

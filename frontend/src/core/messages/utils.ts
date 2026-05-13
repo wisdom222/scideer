@@ -76,12 +76,14 @@ export function getMessageGroups(messages: Message[]): MessageGroup[] {
         const open = lastOpenGroup();
         if (open) {
           open.messages.push(message);
-        } else {
-          console.error(
-            "Unexpected tool message outside a processing group",
-            message,
-          );
         }
+        // 找不到 open processing group 时静默丢弃。已知场景：
+        // - LoopDetectionMiddleware 命中 hard-stop 后清空了对应 AIMessage 的
+        //   tool_calls（见 backend CLAUDE.md），该 AIMessage 被分到 `assistant`
+        //   group 而非 `assistant:processing`，残留的 ToolMessage 就成了孤儿。
+        // - LangGraph values + messages 双流时序错位，下一次 snapshot 会自愈。
+        // 之前这里用 console.error 标记，但 MessageList 每次 token 重渲都会
+        // 触发一次，造成 demo 控制台噪音；保持原本的 drop 行为，去掉 log。
       }
       continue;
     }
