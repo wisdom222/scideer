@@ -1,50 +1,67 @@
 "use client";
 
+import {
+  BarChart3,
+  BookOpen,
+  FileText,
+  FlaskConical,
+  Github,
+  Network,
+  type LucideIcon,
+} from "lucide-react";
+
 import MagicBento, { type BentoCardProps } from "@/components/ui/magic-bento";
 import { cn } from "@/lib/utils";
 
 import { Section } from "../section";
 
-const COLOR = "#0a0a0a";
+const CARD_BG = "#0a0a0a";
+
+function buildLabel(label: string, Icon: LucideIcon): React.ReactNode {
+  return (
+    <span className="flex items-center gap-2 text-[color:var(--gold-2)]">
+      <Icon className="size-4" strokeWidth={2} />
+      {label}
+    </span>
+  );
+}
+
 const features: BentoCardProps[] = [
   {
-    color: COLOR,
-    label: "Context Engineering",
-    title: "Long/Short-term Memory",
-    description: "Now the agent can better understand you",
+    color: CARD_BG,
+    label: buildLabel("Literature", BookOpen),
+    title: "Systematic Search",
+    description: "arXiv + Semantic Scholar with auto-clustering",
   },
   {
-    color: COLOR,
-    label: "Long Task Running",
-    title: "Planning and Sub-tasking",
-    description:
-      "Plans ahead, reasons through complexity, then executes sequentially or in parallel",
+    color: CARD_BG,
+    label: buildLabel("Reproduction", FlaskConical),
+    title: "Paper-to-Code",
+    description: "Extract method and hparams, run in sandbox, compare metrics",
   },
   {
-    color: COLOR,
-    label: "Extensible",
-    title: "Skills and Tools",
-    description:
-      "Plug, play, or even swap built-in tools. Build the agent you want.",
-  },
-
-  {
-    color: COLOR,
-    label: "Persistent",
-    title: "Sandbox with File System",
-    description: "Read, write, run — like a real computer",
+    color: CARD_BG,
+    label: buildLabel("Experiment", BarChart3),
+    title: "Design & Analyze",
+    description: "Plan ablations, run, generate publication figures",
   },
   {
-    color: COLOR,
-    label: "Flexible",
-    title: "Multi-Model Support",
-    description: "Doubao, DeepSeek, OpenAI, Gemini, etc.",
+    color: CARD_BG,
+    label: buildLabel("Writing", FileText),
+    title: "LaTeX Papers",
+    description: "NeurIPS/ICML templates, auto-bibliography, PDF compile",
   },
   {
-    color: COLOR,
-    label: "Free",
-    title: "Open Source",
-    description: "MIT License, self-hosted, full control",
+    color: CARD_BG,
+    label: buildLabel("Citation", Network),
+    title: "Graph Exploration",
+    description: "2-hop citation graph via Semantic Scholar MCP",
+  },
+  {
+    color: CARD_BG,
+    label: buildLabel("Open Source", Github),
+    title: "MIT License",
+    description: "Self-hosted, swappable models, full control",
   },
 ];
 
