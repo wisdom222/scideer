@@ -39,6 +39,7 @@ coverage/
 .claude/
 skills/custom/*
 !skills/custom/scientific-writing/
+!skills/custom/paper-reproduction/
 logs/
 log/
 debug.log
