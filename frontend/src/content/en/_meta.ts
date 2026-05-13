@@ -25,9 +25,6 @@ const meta: MetaRecord = {
   blog: {
     type: "page",
   },
-  posts: {
-    type: "page",
-  },
   login: {
     type: "page",
   },

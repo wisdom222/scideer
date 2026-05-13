@@ -261,10 +261,16 @@ export const getAllPosts = cache(async function getAllPosts(
   preferredLang?: BlogLang,
 ): Promise<BlogPost[]> {
   const localizedPageMaps = await Promise.all(
-    BLOG_LANGS.map(async (lang) => ({
-      items: await getPageMap(`/${lang}/posts`),
-      lang,
-    })),
+    BLOG_LANGS.map(async (lang) => {
+      try {
+        // posts/ 子目录可能不存在（rebrand 清理后），把"找不到"降级为空列表，
+        // 避免整个 blog layout 在 Server Component 渲染阶段抛 Runtime Error。
+        return { items: await getPageMap(`/${lang}/posts`), lang };
+      } catch (error) {
+        console.warn(`[blog] getPageMap('/${lang}/posts') failed:`, error);
+        return { items: [] as PageMapItem[], lang };
+      }
+    }),
   );
 
   const localizedPosts = localizedPageMaps.flatMap(({ items, lang }) =>
