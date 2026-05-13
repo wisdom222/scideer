@@ -39,6 +39,14 @@
       ],
       "env": {},
       "description": "PostgreSQL database access"
+    },
+    "semantic-scholar": {
+      "enabled": true,
+      "type": "stdio",
+      "command": "python",
+      "args": ["-m", "semantic_scholar_mcp"],
+      "env": {},
+      "description": "Semantic Scholar paper search + citation graph (free tier, no API key required). Provides arXiv-beyond paper search, paper detail with references, and citation graph traversal."
     }
   },
   "skills": {}
