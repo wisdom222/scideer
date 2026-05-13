@@ -274,15 +274,15 @@ export function MessageList({
         {groupedMessages.map((group, groupIndex) => {
           const turnUsageMessages = turnUsageMessagesByGroupIndex[groupIndex];
 
-          // group.id 直接用 message.id，但同一 AIMessage 经多版本 patch 可能
-          // 被 getMessageGroups 分到多个 group（reasoning + content 双 push、
-          // tool_calls 被中间件清空降级等），导致同层级 React key 撞。给所有
-          // group 的渲染 key 加 groupIndex 命名空间作为渲染层最后防线。
-          const groupKey = `${groupIndex}/${group.id ?? "anon"}`;
+          // group.id 由 utils.ts 的 nextGroupId() 保证全局唯一（含 type 命名空间 +
+          // 同 base 重复时的 #N 后缀），可以直接当 React key。曾经一度引入
+          // `groupKey = `${groupIndex}/${group.id}`` 来防撞，但 groupIndex 在
+          // loadMore prepend 历史消息时整体偏移，会让所有后续 group remount
+          // 并丢失 ChainOfThought 折叠状态。回滚到 group.id，由上游唯一化保证防撞。
           if (group.type === "human" || group.type === "assistant") {
             return (
               <div
-                key={groupKey}
+                key={group.id}
                 className={cn(
                   "w-full",
                   group.type === "assistant" && "group/assistant-turn",
@@ -311,7 +311,7 @@ export function MessageList({
             const message = group.messages[0];
             if (message && hasContent(message)) {
               return (
-                <div key={groupKey} className="w-full">
+                <div key={group.id} className="w-full">
                   <MarkdownContent
                     content={extractContentFromMessage(message)}
                     isLoading={thread.isLoading}
@@ -334,7 +334,7 @@ export function MessageList({
               }
             }
             return (
-              <div className="w-full" key={groupKey}>
+              <div className="w-full" key={group.id}>
                 {group.messages[0] && hasContent(group.messages[0]) && (
                   <MarkdownContent
                     content={extractContentFromMessage(group.messages[0])}
@@ -448,7 +448,7 @@ export function MessageList({
             }
             return (
               <div
-                key={`${groupKey}/subtask`}
+                key={group.id}
                 className="relative z-1 flex flex-col gap-2"
               >
                 {results}
@@ -461,7 +461,7 @@ export function MessageList({
             );
           }
           return (
-            <div key={`${groupKey}/group`} className="w-full">
+            <div key={group.id} className="w-full">
               <MessageGroup
                 messages={group.messages}
                 isLoading={thread.isLoading}

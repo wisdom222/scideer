@@ -33,6 +33,28 @@ export function getMessageGroups(messages: Message[]): MessageGroup[] {
 
   const groups: MessageGroup[] = [];
 
+  // 每个 group 的 id 必须在整个 groups 数组里全局唯一，否则 React 渲染层
+  // 报 duplicate key。直接用 message.id 不够，因为：
+  //   1. 同一 AIMessage 经 LangGraph streaming 多版本 patch 后，可能同时进入
+  //      processing 和 assistant 两个 group（utils.ts 设计：reasoning + content
+  //      无 tool_calls 时是双 push）。type 命名空间解决这层冲突。
+  //   2. LoopDetectionMiddleware 清空 tool_calls 让 AIMessage 从 processing
+  //      降级为 assistant、随后又重新出现 reasoning，会产生同 (type, message.id)
+  //      重复 push。`#N` 后缀解决这层冲突。
+  // 关键性质：计数器按 (type, message.id) 对独立维护，不是全局递增。
+  // 这样 loadMore 时 prepend 历史消息的新 group 用新 message.id，不会让已
+  // 存在 group 的 id 偏移 —— React 能正确识别"老 group 没变" → 子组件状态保留。
+  const groupIdCounter = new Map<string, number>();
+  function nextGroupId(
+    type: MessageGroup["type"],
+    messageId: string | undefined,
+  ): string {
+    const base = `${type}:${messageId ?? "anon"}`;
+    const count = groupIdCounter.get(base) ?? 0;
+    groupIdCounter.set(base, count + 1);
+    return count === 0 ? base : `${base}#${count}`;
+  }
+
   // Returns the last group if it can still accept tool messages
   // (i.e. it's an in-flight processing group, not a terminal human/assistant group).
   function lastOpenGroup() {
@@ -58,7 +80,11 @@ export function getMessageGroups(messages: Message[]): MessageGroup[] {
     }
 
     if (message.type === "human") {
-      groups.push({ id: message.id, type: "human", messages: [message] });
+      groups.push({
+        id: nextGroupId("human", message.id),
+        type: "human",
+        messages: [message],
+      });
       continue;
     }
 
@@ -68,7 +94,7 @@ export function getMessageGroups(messages: Message[]): MessageGroup[] {
         // then also open a standalone clarification group for prominent display.
         lastOpenGroup()?.messages.push(message);
         groups.push({
-          id: message.id,
+          id: nextGroupId("assistant:clarification", message.id),
           type: "assistant:clarification",
           messages: [message],
         });
@@ -91,13 +117,13 @@ export function getMessageGroups(messages: Message[]): MessageGroup[] {
     if (message.type === "ai") {
       if (hasPresentFiles(message)) {
         groups.push({
-          id: message.id,
+          id: nextGroupId("assistant:present-files", message.id),
           type: "assistant:present-files",
           messages: [message],
         });
       } else if (hasSubagent(message)) {
         groups.push({
-          id: message.id,
+          id: nextGroupId("assistant:subagent", message.id),
           type: "assistant:subagent",
           messages: [message],
         });
@@ -106,7 +132,7 @@ export function getMessageGroups(messages: Message[]): MessageGroup[] {
         // Accumulate consecutive intermediate AI messages into one processing group.
         if (lastGroup?.type !== "assistant:processing") {
           groups.push({
-            id: message.id,
+            id: nextGroupId("assistant:processing", message.id),
             type: "assistant:processing",
             messages: [message],
           });
@@ -118,7 +144,11 @@ export function getMessageGroups(messages: Message[]): MessageGroup[] {
       // Not an else-if: a message with reasoning + content (but no tool calls) goes
       // into the processing group above AND gets its own assistant bubble here.
       if (hasContent(message) && !hasToolCalls(message)) {
-        groups.push({ id: message.id, type: "assistant", messages: [message] });
+        groups.push({
+          id: nextGroupId("assistant", message.id),
+          type: "assistant",
+          messages: [message],
+        });
       }
     }
   }
