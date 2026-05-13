@@ -18,6 +18,7 @@ export function Hero({ className }: { className?: string }) {
         className,
       )}
     >
+      {/* Layer 0: Galaxy backdrop (unchanged) */}
       <div className="absolute inset-0 z-0 bg-black/40">
         <Galaxy
           mouseRepulsion={false}
@@ -28,14 +29,69 @@ export function Hero({ className }: { className?: string }) {
           speed={0.5}
         />
       </div>
+
+      {/* Layer 1: Faint gold stardust (replaces the old mask) */}
       <FlickeringGrid
-        className="absolute inset-0 z-0 translate-y-8 mask-[url(/images/libra-logo.svg)] mask-size-[100vw] mask-center mask-no-repeat md:mask-size-[72vh]"
+        className="absolute inset-0 z-0"
         squareSize={4}
         gridGap={4}
-        color={"white"}
-        maxOpacity={0.3}
-        flickerChance={0.25}
+        color="#e9c665"
+        maxOpacity={0.15}
+        flickerChance={0.2}
       />
+
+      {/* Layer 2: Real Libra constellation overlay (inline SVG so CSS classes apply) */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 z-[1] flex items-center justify-center text-[#e9c665]"
+      >
+        <svg
+          viewBox="0 0 200 200"
+          fill="none"
+          stroke="currentColor"
+          className="size-[200px] md:size-[320px] drop-shadow-[0_0_24px_rgba(233,198,101,0.35)]"
+        >
+          <defs>
+            <filter
+              id="libra-star-glow-inline"
+              x="-50%"
+              y="-50%"
+              width="200%"
+              height="200%"
+            >
+              <feGaussianBlur stdDeviation="2.5" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+          <g stroke="currentColor" strokeWidth="1" opacity="0.45">
+            <line x1="100" y1="40" x2="40" y2="100" />
+            <line x1="100" y1="40" x2="160" y2="100" />
+            <line x1="40" y1="100" x2="100" y2="160" />
+            <line x1="160" y1="100" x2="100" y2="160" />
+          </g>
+          <g fill="currentColor" filter="url(#libra-star-glow-inline)">
+            <circle className="libra-star libra-star--beta" cx="100" cy="40" r="7" />
+            <circle className="libra-star libra-star--alpha" cx="40" cy="100" r="4.5" />
+            <circle className="libra-star libra-star--gamma" cx="160" cy="100" r="4.5" />
+            <circle className="libra-star libra-star--sigma" cx="100" cy="160" r="4.5" />
+          </g>
+          <text
+            x="100"
+            y="115"
+            textAnchor="middle"
+            fontFamily="Georgia, 'Times New Roman', serif"
+            fontSize="48"
+            fontWeight="500"
+            fill="currentColor"
+            opacity="0.85"
+          >
+            L
+          </text>
+        </svg>
+      </div>
       <div className="container-md relative z-10 mx-auto flex h-screen flex-col items-center justify-center">
         <h1 className="flex items-center gap-2 text-4xl font-bold md:text-6xl">
           <WordRotate
@@ -71,7 +127,10 @@ export function Hero({ className }: { className?: string }) {
           and write publication-ready papers — all in one workspace.
         </p>
         <Link href="/workspace">
-          <Button className="size-lg mt-8 scale-108" size="lg">
+          <Button
+            className="size-lg mt-8 scale-108 transition-all duration-200 hover:scale-[1.13] hover:shadow-[0_0_24px_4px_var(--gold-glow)] focus-visible:shadow-[0_0_24px_4px_var(--gold-glow)]"
+            size="lg"
+          >
             <span className="text-md">Start Researching</span>
             <ChevronRightIcon className="size-4" />
           </Button>
