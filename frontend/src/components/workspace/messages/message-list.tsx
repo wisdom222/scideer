@@ -274,10 +274,15 @@ export function MessageList({
         {groupedMessages.map((group, groupIndex) => {
           const turnUsageMessages = turnUsageMessagesByGroupIndex[groupIndex];
 
+          // group.id 直接用 message.id，但同一 AIMessage 经多版本 patch 可能
+          // 被 getMessageGroups 分到多个 group（reasoning + content 双 push、
+          // tool_calls 被中间件清空降级等），导致同层级 React key 撞。给所有
+          // group 的渲染 key 加 groupIndex 命名空间作为渲染层最后防线。
+          const groupKey = `${groupIndex}/${group.id ?? "anon"}`;
           if (group.type === "human" || group.type === "assistant") {
             return (
               <div
-                key={group.id}
+                key={groupKey}
                 className={cn(
                   "w-full",
                   group.type === "assistant" && "group/assistant-turn",
@@ -306,7 +311,7 @@ export function MessageList({
             const message = group.messages[0];
             if (message && hasContent(message)) {
               return (
-                <div key={group.id} className="w-full">
+                <div key={groupKey} className="w-full">
                   <MarkdownContent
                     content={extractContentFromMessage(message)}
                     isLoading={thread.isLoading}
@@ -329,7 +334,7 @@ export function MessageList({
               }
             }
             return (
-              <div className="w-full" key={group.id}>
+              <div className="w-full" key={groupKey}>
                 {group.messages[0] && hasContent(group.messages[0]) && (
                   <MarkdownContent
                     content={extractContentFromMessage(group.messages[0])}
@@ -443,7 +448,7 @@ export function MessageList({
             }
             return (
               <div
-                key={"subtask-group-" + group.id}
+                key={`${groupKey}/subtask`}
                 className="relative z-1 flex flex-col gap-2"
               >
                 {results}
@@ -456,7 +461,7 @@ export function MessageList({
             );
           }
           return (
-            <div key={"group-" + group.id} className="w-full">
+            <div key={`${groupKey}/group`} className="w-full">
               <MessageGroup
                 messages={group.messages}
                 isLoading={thread.isLoading}
