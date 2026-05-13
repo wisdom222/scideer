@@ -19,15 +19,6 @@ const meta: MetaRecord = {
   reference: {
     title: "Reference",
   },
-  workspace: {
-    type: "page",
-  },
-  login: {
-    type: "page",
-  },
-  setup: {
-    type: "page",
-  },
 };
 
 export default meta;
