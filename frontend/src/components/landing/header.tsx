@@ -31,7 +31,15 @@ export async function Header({ className, homeURL, locale }: HeaderProps) {
           target={isExternalHome ? "_blank" : "_self"}
           rel={isExternalHome ? "noopener noreferrer" : undefined}
         >
-          <h1 className="font-serif text-xl">Libra</h1>
+          <div className="flex items-center gap-2">
+            <img
+              src="/images/libra-mark.svg"
+              alt=""
+              aria-hidden="true"
+              className="size-5"
+            />
+            <h1 className="font-serif text-xl">Libra</h1>
+          </div>
         </a>
       </div>
       <nav className="mr-8 ml-auto flex items-center gap-8 text-sm font-medium">
