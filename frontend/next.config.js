@@ -16,10 +16,9 @@ const withNextra = nextra({});
 
 /** @type {import("next").NextConfig} */
 const config = {
-  i18n: {
-    locales: ["en", "zh"],
-    defaultLocale: "en",
-  },
+  // Legacy Pages-Router i18n block was removed alongside the locale clamp —
+  // the App Router doesn't read it, and the `zh` locale is no longer supported.
+  // See docs/plans/2026-05-14-libra-english-only-design.md.
   devIndicators: false,
   async rewrites() {
     const rewrites = [];

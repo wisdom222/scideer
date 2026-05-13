@@ -7,7 +7,10 @@ import { Header } from "@/components/landing/header";
 import { getLocaleByLang } from "@/core/i18n/locale";
 import "nextra-theme-docs/style.css";
 
-const i18n = [{ locale: "en", name: "English" }];
+// Empty array hides the Nextra LocaleSwitch entirely (it short-circuits to
+// null when length === 0). The product is English-only — no useless 1-item
+// dropdown. See docs/plans/2026-05-14-libra-english-only-design.md §3.2.
+const i18n: { locale: string; name: string }[] = [];
 
 function formatPageRoute(base: string, items: PageMapItem[]): PageMapItem[] {
   return items.map((item) => {
