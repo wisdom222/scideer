@@ -376,7 +376,7 @@
   }
 
   .golden-text {
-    background: linear-gradient(135deg, #d19e1d 0%, #e9c665 50%, #e3a812 100%);
+    background: linear-gradient(135deg, var(--gold-1) 0%, var(--gold-2) 50%, var(--gold-3) 100%);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -431,4 +431,12 @@
   .libra-star {
     animation: none;
   }
+}
+
+@utility text-gold {
+  color: var(--gold-2);
+}
+
+@utility shadow-gold-glow {
+  box-shadow: 0 0 24px 4px var(--gold-glow);
 }

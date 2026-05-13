@@ -118,10 +118,10 @@ export function CaseStudySection({ className }: { className?: string }) {
                   }}
                 >
                   <div className="flex flex-col gap-2">
-                    <h3 className="flex h-14 items-center text-xl font-bold text-white text-shadow-black">
+                    <h3 className="flex h-14 items-center text-xl font-bold text-white text-shadow-sm">
                       {title}
                     </h3>
-                    <p className="overflow-hidden text-sm text-white/85 text-shadow-black">
+                    <p className="overflow-hidden text-sm text-white/85 text-shadow-sm">
                       {description}
                     </p>
                   </div>

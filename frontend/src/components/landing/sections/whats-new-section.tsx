@@ -19,7 +19,7 @@ const CARD_BG = "#0a0a0a";
 
 function buildLabel(label: string, Icon: LucideIcon): React.ReactNode {
   return (
-    <span className="flex items-center gap-2 text-[color:var(--gold-2)]">
+    <span className="flex items-center gap-2 text-gold">
       <Icon className="size-4" strokeWidth={2} />
       {label}
     </span>

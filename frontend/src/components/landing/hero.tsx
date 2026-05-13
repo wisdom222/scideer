@@ -128,7 +128,7 @@ export function Hero({ className }: { className?: string }) {
         </p>
         <Link href="/workspace">
           <Button
-            className="size-lg mt-8 scale-108 transition-all duration-200 hover:scale-[1.13] hover:shadow-[0_0_24px_4px_var(--gold-glow)] focus-visible:shadow-[0_0_24px_4px_var(--gold-glow)]"
+            className="size-lg mt-8 scale-108 transition-all duration-200 hover:scale-[1.13] hover:shadow-gold-glow focus-visible:shadow-gold-glow"
             size="lg"
           >
             <span className="text-md">Start Researching</span>
