@@ -1,0 +1,41 @@
+---
+title: Introduction
+description: Start here to understand what Libra is, the problems it solves, and how its two layers — the Harness runtime and the Application — fit together.
+---
+
+import { Callout, Cards } from "nextra/components";
+
+# Introduction
+
+Libra is a framework for building and operating long-horizon agent systems. It pairs a runtime **Harness** for composing agents with memory, tools, skills, sandboxes, and subagents, with an **Application** layer that turns those capabilities into a usable product.
+
+<Callout type="info" emoji="🧭">
+  If this is your first time with Libra, read the two pages in this section
+  before going deeper into the Harness or Application docs. They establish the
+  vocabulary the rest of the documentation assumes.
+</Callout>
+
+## Why Libra exists
+
+Most agent tooling optimizes for a single turn: take a prompt, call a model, return a response. Real research and engineering work is not single-turn. It spans many steps, accumulates context, runs code, reads results, and adjusts course.
+
+Libra is built for that long-horizon shape. The architecture — a runtime harness underneath a product application — exists so that agents can carry state, act through tools and sandboxes, and stay coherent across an extended task instead of starting fresh on every message.
+
+## The two layers
+
+- **Harness** — the Python SDK and runtime foundation. This is what you build on if you want to compose your own agent system: memory, tools, skills, sandboxed execution, subagents, and the middleware chain that orchestrates them.
+- **Application** — a reference product built on top of the Harness. This is what you deploy and operate if you want Libra as a working application with a chat workspace, threads, artifacts, and configuration.
+
+You can engage with Libra at either layer. Builders integrating Libra into their own systems live mostly in the Harness docs; teams deploying and running Libra live mostly in the Application docs.
+
+## What to read next
+
+<Cards num={2}>
+  <Cards.Card title="Core Concepts" href="/docs/introduction/core-concepts" />
+  <Cards.Card
+    title="Harness vs App"
+    href="/docs/introduction/harness-vs-app"
+  />
+</Cards>
+
+Once the concepts are clear, continue to the [Harness](/docs/harness) docs to build on the runtime, or the [Application](/docs/application) docs to deploy and operate Libra.

@@ -1,0 +1,50 @@
+---
+title: Tutorials
+description: Hands-on, step-by-step guides that take you from your first agent conversation to building a custom Harness with tools, skills, and memory.
+---
+
+import { Callout, Cards } from "nextra/components";
+
+# Tutorials
+
+These tutorials are the guided path through Libra. Each one is a complete, self-contained walkthrough — start at the top and work down, or jump to the one that matches what you are trying to do.
+
+<Callout type="info" emoji="🛠️">
+  The tutorials assume you have Libra running locally. If you have not set that
+  up yet, follow the Application <a href="/docs/application/quick-start">Quick
+  Start</a> first, then come back here.
+</Callout>
+
+## Learning path
+
+The tutorials build on each other in this order:
+
+1. **First Conversation** — launch the app, send your first message, and get the agent to do meaningful work. Establishes the basic interaction loop.
+2. **Create Your First Harness** — move from using the app to building on the runtime. Compose a minimal agent with the Harness SDK.
+3. **Use Tools and Skills** — extend an agent with tools and skills so it can act, not just respond.
+4. **Work with Memory** — give an agent persistent memory so it stays coherent across a long-horizon task.
+
+By the end of the path you will have touched every core capability of the Libra runtime and seen how the Application surfaces them.
+
+## Start here
+
+<Cards num={2}>
+  <Cards.Card
+    title="First Conversation"
+    href="/docs/tutorials/first-conversation"
+  />
+  <Cards.Card
+    title="Create Your First Harness"
+    href="/docs/tutorials/create-your-first-harness"
+  />
+  <Cards.Card
+    title="Use Tools and Skills"
+    href="/docs/tutorials/use-tools-and-skills"
+  />
+  <Cards.Card
+    title="Work with Memory"
+    href="/docs/tutorials/work-with-memory"
+  />
+</Cards>
+
+For the concepts behind these tutorials, see [Core Concepts](/docs/introduction/core-concepts). For the full runtime reference, see the [Harness](/docs/harness) docs.

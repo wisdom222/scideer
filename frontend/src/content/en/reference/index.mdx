@@ -1,0 +1,34 @@
+---
+title: Reference
+description: Lookup-oriented documentation for Libra — configuration details, supported integrations, and provider-specific setup.
+---
+
+import { Callout, Cards } from "nextra/components";
+
+# Reference
+
+The Reference section is lookup-oriented documentation: the details you come back to when you need exact configuration, supported options, or provider-specific setup. Unlike the tutorials, it is not meant to be read front to back.
+
+<Callout type="info" emoji="📚">
+  If you are looking for conceptual explanation or a guided walkthrough, the{" "}
+  <a href="/docs/introduction">Introduction</a> and{" "}
+  <a href="/docs/tutorials">Tutorials</a> sections are the better starting
+  points. The Reference assumes you already know what you are configuring.
+</Callout>
+
+## Sections
+
+- **Model providers** — how to configure the language-model backends Libra can run on, including provider-specific credentials and endpoint settings.
+
+This section grows as more of Libra's surface area gets pinned down to exact, reference-grade documentation.
+
+## Browse
+
+<Cards num={2}>
+  <Cards.Card
+    title="Model providers"
+    href="/docs/reference/model-providers"
+  />
+</Cards>
+
+For runtime configuration that lives in the Harness rather than in provider setup, see [Harness → Configuration](/docs/harness/configuration). For deployment and operations configuration, see [Application → Configuration](/docs/application/configuration).
