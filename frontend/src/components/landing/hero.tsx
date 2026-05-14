@@ -40,101 +40,103 @@ export function Hero({ className }: { className?: string }) {
         flickerChance={0.15}
       />
 
-      {/* Layer 2: Real Libra constellation overlay (inline SVG so CSS classes apply).
-          Asymmetric quad β–γ–α with a pendant σ below α — the actual star pattern,
-          rendered in the silver-white of the background Galaxy stars. */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute top-[14%] left-1/2 z-[1] -translate-x-1/2 text-[#e8eef5]"
-      >
-        <svg
-          viewBox="0 0 200 200"
-          fill="none"
-          stroke="currentColor"
-          className="size-[160px] md:size-[240px] opacity-95 drop-shadow-[0_0_28px_rgba(232,238,245,0.55)]"
-        >
-          <defs>
-            <filter
-              id="libra-star-glow-inline"
-              x="-60%"
-              y="-60%"
-              width="220%"
-              height="220%"
-            >
-              <feGaussianBlur stdDeviation="2.8" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-          </defs>
-          {/* Constellation connector lines */}
-          <g
-            stroke="currentColor"
-            strokeWidth="1"
-            opacity="0.4"
-            strokeLinecap="round"
-          >
-            <line x1="118" y1="40" x2="166" y2="86" />
-            <line x1="118" y1="40" x2="56" y2="96" />
-            <line x1="56" y1="96" x2="166" y2="86" />
-            <line x1="56" y1="96" x2="80" y2="166" />
-          </g>
-          {/* Cross diffraction spikes on the brightest star (β Lib) for sparkle */}
-          <g
-            className="libra-spike"
-            stroke="currentColor"
-            strokeWidth="1"
-            opacity="0.6"
-            strokeLinecap="round"
-          >
-            <line x1="118" y1="18" x2="118" y2="62" />
-            <line x1="96" y1="40" x2="140" y2="40" />
-          </g>
-          {/* 4 Libra main stars, sized by real apparent magnitude */}
-          <g fill="currentColor" filter="url(#libra-star-glow-inline)">
-            <circle
-              className="libra-star libra-star--beta"
-              cx="118"
-              cy="40"
-              r="6.5"
-            />
-            <circle
-              className="libra-star libra-star--gamma"
-              cx="166"
-              cy="86"
-              r="4"
-            />
-            <circle
-              className="libra-star libra-star--alpha"
-              cx="56"
-              cy="96"
-              r="5"
-            />
-            <circle
-              className="libra-star libra-star--sigma"
-              cx="80"
-              cy="166"
-              r="4.5"
-            />
-          </g>
-        </svg>
-      </div>
       <div className="container-md relative z-10 mx-auto flex h-screen flex-col items-center justify-center">
-        <h1 className="flex items-center gap-2 text-4xl font-bold md:text-6xl">
-          <WordRotate
-            words={[
-              "Survey Literature",
-              "Reproduce Papers",
-              "Design Experiments",
-              "Visualize Data",
-              "Write LaTeX Papers",
-              "Build Citation Graphs",
-              "Discover Research",
-            ]}
-          />{" "}
-          <div>with Libra</div>
-        </h1>
+        <div className="relative flex items-center justify-center">
+          {/* Libra constellation — enlarged, blurred, sitting behind the title.
+              Asymmetric quad β–γ–α with a pendant σ below α — the actual star
+              pattern, in the silver-white of the background Galaxy stars. */}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute top-1/2 left-1/2 z-0 -translate-x-1/2 -translate-y-1/2 text-[#e8eef5]"
+          >
+            <svg
+              viewBox="0 0 200 200"
+              fill="none"
+              stroke="currentColor"
+              className="size-[320px] opacity-35 blur-[3px] drop-shadow-[0_0_28px_rgba(232,238,245,0.55)] md:size-[440px]"
+            >
+              <defs>
+                <filter
+                  id="libra-star-glow-inline"
+                  x="-60%"
+                  y="-60%"
+                  width="220%"
+                  height="220%"
+                >
+                  <feGaussianBlur stdDeviation="2.8" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+              </defs>
+              {/* Constellation connector lines */}
+              <g
+                stroke="currentColor"
+                strokeWidth="1"
+                opacity="0.4"
+                strokeLinecap="round"
+              >
+                <line x1="118" y1="40" x2="166" y2="86" />
+                <line x1="118" y1="40" x2="56" y2="96" />
+                <line x1="56" y1="96" x2="166" y2="86" />
+                <line x1="56" y1="96" x2="80" y2="166" />
+              </g>
+              {/* Cross diffraction spikes on the brightest star (β Lib) */}
+              <g
+                className="libra-spike"
+                stroke="currentColor"
+                strokeWidth="1"
+                opacity="0.6"
+                strokeLinecap="round"
+              >
+                <line x1="118" y1="18" x2="118" y2="62" />
+                <line x1="96" y1="40" x2="140" y2="40" />
+              </g>
+              {/* 4 Libra main stars, sized by real apparent magnitude */}
+              <g fill="currentColor" filter="url(#libra-star-glow-inline)">
+                <circle
+                  className="libra-star libra-star--beta"
+                  cx="118"
+                  cy="40"
+                  r="6.5"
+                />
+                <circle
+                  className="libra-star libra-star--gamma"
+                  cx="166"
+                  cy="86"
+                  r="4"
+                />
+                <circle
+                  className="libra-star libra-star--alpha"
+                  cx="56"
+                  cy="96"
+                  r="5"
+                />
+                <circle
+                  className="libra-star libra-star--sigma"
+                  cx="80"
+                  cy="166"
+                  r="4.5"
+                />
+              </g>
+            </svg>
+          </div>
+          <h1 className="relative z-10 flex items-center gap-2 text-4xl font-bold md:text-6xl">
+            <WordRotate
+              words={[
+                "Survey Literature",
+                "Reproduce Papers",
+                "Design Experiments",
+                "Visualize Data",
+                "Write LaTeX Papers",
+                "Build Citation Graphs",
+                "Discover Research",
+              ]}
+            />{" "}
+            <div>with Libra</div>
+          </h1>
+        </div>
         {env.NEXT_PUBLIC_STATIC_WEBSITE_ONLY && (
           <a
             href="https://byteplus.com"

@@ -521,7 +521,7 @@ export function CaseStudySection({ className }: { className?: string }) {
       title="Case Studies"
       subtitle="See how Libra accelerates the full research lifecycle"
     >
-      <div className="container-md mt-8 grid grid-cols-1 gap-6 px-4 md:grid-cols-2 md:px-8">
+      <div className="container-md mx-auto mt-8 grid grid-cols-1 gap-6 px-4 md:grid-cols-2 md:px-8 lg:grid-cols-3">
         {CASE_STUDIES.map(({ threadId, title, description, Art }) => (
           <Link
             key={threadId}
@@ -534,30 +534,26 @@ export function CaseStudySection({ className }: { className?: string }) {
               <div className="pointer-events-none absolute inset-0 z-0 transition-transform duration-300 group-hover/card:scale-105">
                 <Art className="size-full" />
               </div>
-              {/* Title / description tray — slide-up reveal */}
+              {/* Bottom tray — title always visible, description reveals on hover */}
               <div
-                className={cn(
-                  "absolute right-0 bottom-0 left-0 z-[2] flex h-full w-full translate-y-[calc(100%-92px)] flex-col items-center",
-                  "transition-all duration-300",
-                  "group-hover/card:translate-y-[calc(100%-184px)]",
-                )}
+                className="absolute right-0 bottom-0 left-0 z-[2] flex flex-col gap-2 p-5"
+                style={{
+                  background:
+                    "linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.9) 60%)",
+                }}
               >
-                <div
-                  className="flex w-full flex-col p-6"
-                  style={{
-                    background:
-                      "linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.88) 100%)",
-                  }}
+                <h3 className="text-lg font-bold leading-snug text-white text-shadow-sm line-clamp-2">
+                  {title}
+                </h3>
+                <p
+                  className={cn(
+                    "max-h-0 overflow-hidden text-sm text-white/85 opacity-0 text-shadow-sm",
+                    "transition-all duration-300",
+                    "group-hover/card:max-h-32 group-hover/card:opacity-100",
+                  )}
                 >
-                  <div className="flex flex-col gap-2">
-                    <h3 className="text-xl font-bold leading-snug text-white text-shadow-sm line-clamp-2">
-                      {title}
-                    </h3>
-                    <p className="overflow-hidden text-sm text-white/85 text-shadow-sm line-clamp-3">
-                      {description}
-                    </p>
-                  </div>
-                </div>
+                  {description}
+                </p>
               </div>
             </Card>
           </Link>

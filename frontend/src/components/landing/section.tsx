@@ -12,7 +12,9 @@ export function Section({
   children: React.ReactNode;
 }) {
   return (
-    <section className={cn("mx-auto flex flex-col py-16", className)}>
+    <section
+      className={cn("mx-auto flex scroll-mt-20 flex-col pt-24 pb-16", className)}
+    >
       <header className="flex flex-col items-center justify-between">
         <div className="mb-4 bg-linear-to-r from-white via-gray-200 to-gray-400 bg-clip-text text-center text-5xl font-bold text-transparent">
           {title}
