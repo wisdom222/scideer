@@ -16,9 +16,16 @@ const withNextra = nextra({});
 
 /** @type {import("next").NextConfig} */
 const config = {
-  // Legacy Pages-Router i18n block was removed alongside the locale clamp —
-  // the App Router doesn't read it, and the `zh` locale is no longer supported.
+  // Nextra 4's build plugin reads this `i18n` block to discover that
+  // `content/<locale>/` is a locale-namespaced tree and to key its page map
+  // by locale — importPage(path, lang) does pageMap[lang](), which throws
+  // "is not a function" if the locale isn't registered here. After the
+  // English-only sweep this list is `["en"]` only (zh removed).
   // See docs/plans/2026-05-14-libra-english-only-design.md.
+  i18n: {
+    locales: ["en"],
+    defaultLocale: "en",
+  },
   devIndicators: false,
   async rewrites() {
     const rewrites = [];
