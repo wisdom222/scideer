@@ -67,23 +67,25 @@ export function Welcome({
         className,
       )}
     >
-      {!isSkillMode && (
-        <LibraMark
-          className={cn(
-            "text-foreground/80 size-11",
-            !waved ? "animate-wave" : "",
-          )}
-        />
-      )}
-      <div className="text-2xl font-bold">
-        {isSkillMode ? (
-          `✨ ${t.welcome.createYourOwnSkill} ✨`
-        ) : (
-          <AuroraText colors={colors}>{t.welcome.greeting}</AuroraText>
-        )}
-      </div>
       {isSkillMode ? (
-        <div className="text-muted-foreground text-sm">
+        <div className="font-serif text-2xl font-medium md:text-3xl">
+          {`✨ ${t.welcome.createYourOwnSkill} ✨`}
+        </div>
+      ) : (
+        <div className="flex items-center justify-center gap-3">
+          <LibraMark
+            className={cn(
+              "text-foreground/80 size-9 md:size-10",
+              !waved ? "animate-wave" : "",
+            )}
+          />
+          <div className="font-serif text-3xl font-medium md:text-4xl">
+            <AuroraText colors={colors}>{t.welcome.greeting}</AuroraText>
+          </div>
+        </div>
+      )}
+      {isSkillMode ? (
+        <div className="text-muted-foreground text-base">
           {t.welcome.createYourOwnSkillDescription.includes("\n") ? (
             <pre className="font-sans whitespace-pre">
               {t.welcome.createYourOwnSkillDescription}
@@ -93,7 +95,7 @@ export function Welcome({
           )}
         </div>
       ) : (
-        <p className="text-muted-foreground text-sm">{t.welcome.description}</p>
+        <p className="text-muted-foreground text-base">{t.welcome.description}</p>
       )}
     </div>
   );

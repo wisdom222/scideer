@@ -151,7 +151,7 @@ export default function ChatPage() {
                   "relative w-full",
                   isNewThread && "-translate-y-[calc(50vh-96px)]",
                   isNewThread
-                    ? "max-w-(--container-width-sm)"
+                    ? "max-w-3xl"
                     : "max-w-(--container-width-md)",
                 )}
               >
