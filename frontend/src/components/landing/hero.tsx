@@ -40,43 +40,83 @@ export function Hero({ className }: { className?: string }) {
         flickerChance={0.15}
       />
 
-      {/* Layer 2: Real Libra constellation overlay (inline SVG so CSS classes apply) */}
+      {/* Layer 2: Real Libra constellation overlay (inline SVG so CSS classes apply).
+          Asymmetric quad β–γ–α with a pendant σ below α — the actual star pattern,
+          rendered in the silver-white of the background Galaxy stars. */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute top-[14%] left-1/2 z-[1] -translate-x-1/2 text-[#e9c665]"
+        className="pointer-events-none absolute top-[14%] left-1/2 z-[1] -translate-x-1/2 text-[#e8eef5]"
       >
         <svg
           viewBox="0 0 200 200"
           fill="none"
           stroke="currentColor"
-          className="size-[160px] md:size-[240px] opacity-90 drop-shadow-[0_0_32px_rgba(233,198,101,0.5)]"
+          className="size-[160px] md:size-[240px] opacity-95 drop-shadow-[0_0_28px_rgba(232,238,245,0.55)]"
         >
           <defs>
             <filter
               id="libra-star-glow-inline"
-              x="-50%"
-              y="-50%"
-              width="200%"
-              height="200%"
+              x="-60%"
+              y="-60%"
+              width="220%"
+              height="220%"
             >
-              <feGaussianBlur stdDeviation="2.5" result="blur" />
+              <feGaussianBlur stdDeviation="2.8" result="blur" />
               <feMerge>
                 <feMergeNode in="blur" />
                 <feMergeNode in="SourceGraphic" />
               </feMerge>
             </filter>
           </defs>
-          <g stroke="currentColor" strokeWidth="1" opacity="0.45">
-            <line x1="100" y1="40" x2="40" y2="100" />
-            <line x1="100" y1="40" x2="160" y2="100" />
-            <line x1="40" y1="100" x2="100" y2="160" />
-            <line x1="160" y1="100" x2="100" y2="160" />
+          {/* Constellation connector lines */}
+          <g
+            stroke="currentColor"
+            strokeWidth="1"
+            opacity="0.4"
+            strokeLinecap="round"
+          >
+            <line x1="118" y1="40" x2="166" y2="86" />
+            <line x1="118" y1="40" x2="56" y2="96" />
+            <line x1="56" y1="96" x2="166" y2="86" />
+            <line x1="56" y1="96" x2="80" y2="166" />
           </g>
+          {/* Cross diffraction spikes on the brightest star (β Lib) for sparkle */}
+          <g
+            className="libra-spike"
+            stroke="currentColor"
+            strokeWidth="1"
+            opacity="0.6"
+            strokeLinecap="round"
+          >
+            <line x1="118" y1="18" x2="118" y2="62" />
+            <line x1="96" y1="40" x2="140" y2="40" />
+          </g>
+          {/* 4 Libra main stars, sized by real apparent magnitude */}
           <g fill="currentColor" filter="url(#libra-star-glow-inline)">
-            <circle className="libra-star libra-star--beta" cx="100" cy="40" r="7" />
-            <circle className="libra-star libra-star--alpha" cx="40" cy="100" r="4.5" />
-            <circle className="libra-star libra-star--gamma" cx="160" cy="100" r="4.5" />
-            <circle className="libra-star libra-star--sigma" cx="100" cy="160" r="4.5" />
+            <circle
+              className="libra-star libra-star--beta"
+              cx="118"
+              cy="40"
+              r="6.5"
+            />
+            <circle
+              className="libra-star libra-star--gamma"
+              cx="166"
+              cy="86"
+              r="4"
+            />
+            <circle
+              className="libra-star libra-star--alpha"
+              cx="56"
+              cy="96"
+              r="5"
+            />
+            <circle
+              className="libra-star libra-star--sigma"
+              cx="80"
+              cy="166"
+              r="4.5"
+            />
           </g>
         </svg>
       </div>

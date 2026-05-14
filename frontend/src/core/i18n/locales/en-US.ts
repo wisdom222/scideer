@@ -60,8 +60,7 @@ export const enUS: Translations = {
   // Welcome
   welcome: {
     greeting: "Hello, again!",
-    description:
-      "Welcome to Libra, a scientific research agent for the full research lifecycle. With built-in and custom skills, Libra helps you survey literature, reproduce papers, design experiments, and write publication-ready papers.",
+    description: "Your scientific research agent for the full research lifecycle.",
 
     createYourOwnSkill: "Create Your Own Skill",
     createYourOwnSkillDescription:

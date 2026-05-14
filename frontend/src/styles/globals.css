@@ -395,17 +395,29 @@
   --gold-glow: rgba(233, 198, 101, 0.45);
 }
 
+/* Silver-white star twinkle — matches the background Galaxy stars. */
 @keyframes star-twinkle {
   0%,
   100% {
     transform: scale(1);
     opacity: 1;
-    filter: drop-shadow(0 0 6px var(--gold-2));
+    filter: drop-shadow(0 0 6px rgba(232, 238, 245, 0.9));
   }
   50% {
-    transform: scale(1.15);
-    opacity: 0.6;
-    filter: drop-shadow(0 0 14px var(--gold-2));
+    transform: scale(1.18);
+    opacity: 0.65;
+    filter: drop-shadow(0 0 16px rgba(232, 238, 245, 1));
+  }
+}
+
+/* Diffraction-spike shimmer on the brightest star (β Lib). */
+@keyframes spike-shimmer {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 0.85;
   }
 }
 
@@ -427,8 +439,15 @@
   animation-delay: 1.8s;
 }
 
+.libra-spike {
+  transform-origin: center;
+  transform-box: fill-box;
+  animation: spike-shimmer 2.4s ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .libra-star {
+  .libra-star,
+  .libra-spike {
     animation: none;
   }
 }

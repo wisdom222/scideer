@@ -1,18 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
-  <!-- 4 stars only, no glow, no connections -->
-  <g fill="currentColor">
-    <circle cx="100" cy="40"  r="8"/>
-    <circle cx="40"  cy="100" r="6"/>
-    <circle cx="160" cy="100" r="6"/>
-    <circle cx="100" cy="160" r="6"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none">
+  <!-- Real Libra constellation: asymmetric quad (β γ α) + pendant σ. No diamond, no L. -->
+  <g stroke="currentColor" stroke-width="2" opacity="0.5" stroke-linecap="round">
+    <line x1="118" y1="40"  x2="166" y2="86"/>
+    <line x1="118" y1="40"  x2="56"  y2="96"/>
+    <line x1="56"  y1="96"  x2="166" y2="86"/>
+    <line x1="56"  y1="96"  x2="80"  y2="166"/>
   </g>
-
-  <!-- Center L -->
-  <text x="100" y="118"
-        text-anchor="middle"
-        font-family="Georgia, 'Times New Roman', serif"
-        font-size="56"
-        font-weight="500"
-        fill="currentColor">L</text>
+  <g fill="currentColor">
+    <circle cx="118" cy="40"  r="9"/>
+    <circle cx="166" cy="86"  r="5.5"/>
+    <circle cx="56"  cy="96"  r="7"/>
+    <circle cx="80"  cy="166" r="6"/>
+  </g>
 </svg>
