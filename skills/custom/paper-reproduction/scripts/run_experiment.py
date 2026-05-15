@@ -176,7 +176,7 @@ def _scan_for_failure_signals(stdout: str) -> list[str]:
 
 def _write_metrics(workspace: Path, **kwargs):
     metrics = {
-        "schema_version": "1.0",
+        "schema_version": "1.1",
         "arxiv_id": kwargs.get("arxiv_id", ""),
         "code_source": kwargs.get("code_source", "unknown"),
         "code_path_in_workspace": kwargs.get("code_path_in_workspace", ""),
@@ -186,6 +186,13 @@ def _write_metrics(workspace: Path, **kwargs):
         "training_curve": kwargs.get("training_curve", []),
         "errors": kwargs.get("errors", []),
         "warnings": kwargs.get("warnings", []),
+        # tier_attempts: chronological list of code-acquisition attempts. Each
+        # entry: {"tier": "cache"|"github_clone"|"template",
+        #         "outcome": "ran"|"miss"|"no_entrypoint"|"execution_failed",
+        #         "reason": short string explaining outcome}
+        # Added in schema 1.1 to surface execution-failure fallback chain (e.g.
+        # cache acquired but dep_missing -> fell through to template).
+        "tier_attempts": kwargs.get("tier_attempts", []),
     }
     (workspace / "metrics.json").write_text(json.dumps(metrics, indent=2), encoding="utf-8")
 
@@ -195,68 +202,163 @@ def _read_cache_dir() -> Path:
     return Path(os.environ.get("SCIDEER_CACHE_DIR", "/mnt/scideer-cache"))
 
 
+# Reasons that trigger automatic fall-through to the next tier.
+# (OOM/timeout/NaN are NOT here -- they're non-recoverable: the next tier would
+# hit the same wall, and silently switching would mask real reproduction issues.)
+_FALLBACK_REASONS = {"dep_missing", "no_entrypoint"}
+
+
+def _acquire_cache(cache_root: Path, repo_url: str | None, code_dir: Path) -> tuple[bool, str]:
+    cached = _try_cache(cache_root, repo_url)
+    if cached is None:
+        return False, "cache_miss"
+    shutil.copytree(cached, code_dir / cached.name)
+    return True, "acquired"
+
+
+def _acquire_github_clone(repo_url: str | None, code_dir: Path) -> tuple[bool, str]:
+    if not repo_url:
+        return False, "no_url"
+    target = code_dir / (_repo_name_from_url(repo_url) or "repo")
+    if _try_clone(repo_url, target):
+        return True, "acquired"
+    return False, "clone_failed"
+
+
+def _acquire_template(code_dir: Path) -> tuple[bool, str]:
+    try:
+        _use_template(code_dir)
+        return True, "acquired"
+    except FileNotFoundError as exc:
+        return False, f"template_missing: {exc}"
+
+
+def _run_one_tier(code_dir: Path, plan: dict, timeout: int, log_path: Path):
+    """Detect entrypoint and run subprocess. Returns a dict describing outcome.
+
+    Keys: status ("ran"|"no_entrypoint"), entrypoint, exit_code, elapsed,
+          final_metrics, training_curve, errors.
+    """
+    try:
+        entrypoint = _detect_entrypoint(code_dir)
+    except FileNotFoundError as exc:
+        return {"status": "no_entrypoint",
+                "entrypoint": None, "exit_code": -1, "elapsed": 0.0,
+                "final_metrics": None, "training_curve": [],
+                "errors": [f"no_entrypoint: {exc}"]}
+
+    env = _build_env(plan)
+    started = time.time()
+    exit_code, stdout, run_errors = _run_subprocess(entrypoint, env, timeout, log_path)
+    elapsed = time.time() - started
+
+    final_metrics, curve = _parse_metrics(stdout)
+    failure_errors = _scan_for_failure_signals(stdout)
+    return {"status": "ran", "entrypoint": entrypoint,
+            "exit_code": exit_code, "elapsed": elapsed,
+            "final_metrics": final_metrics, "training_curve": curve,
+            "errors": run_errors + failure_errors}
+
+
+def _is_fallback_eligible(outcome: dict) -> tuple[bool, str]:
+    """Decide whether this tier outcome should trigger fall-through to next tier.
+
+    Returns (eligible, reason_string).
+    """
+    if outcome["status"] == "no_entrypoint":
+        return True, "no_entrypoint"
+    errors = outcome["errors"]
+    if any("dep_missing" in e for e in errors):
+        return True, "dep_missing"
+    return False, ""
+
+
 def main() -> int:
-    parser = argparse.ArgumentParser(description="3-tier code acquire + run.")
+    parser = argparse.ArgumentParser(description="3-tier code acquire + run with execution-failure fallback.")
     parser.add_argument("--workspace", required=True, type=Path)
     parser.add_argument("--timeout", type=int, default=240)
     args = parser.parse_args()
 
     plan = json.loads((args.workspace / "repro_plan.json").read_text(encoding="utf-8"))
     code_dir = args.workspace / "code"
-    if code_dir.exists():
-        shutil.rmtree(code_dir)
-    code_dir.mkdir(parents=True)
-
-    # --- 3-tier acquisition ---
-    code_source = "unknown"
     repo_url = plan.get("code_repo_url")
     cache_root = _read_cache_dir()
+    log_path = args.workspace / "logs" / "run.log"
 
-    cached = _try_cache(cache_root, repo_url)
-    if cached is not None:
-        shutil.copytree(cached, code_dir / cached.name)
-        code_source = "cache"
-    elif repo_url and _try_clone(repo_url, code_dir / (_repo_name_from_url(repo_url) or "repo")):
-        code_source = "github_clone"
-    else:
-        try:
-            _use_template(code_dir)
-            code_source = "template"
-        except Exception as exc:
-            _write_metrics(args.workspace, arxiv_id=plan.get("arxiv_id", ""),
-                           code_source="template", exit_code=-1,
-                           errors=[f"acquire_failed: all 3 tiers exhausted: {exc}"])
-            return 0
+    # Tiers are tried in order. Each tier: clean code_dir, acquire, run.
+    # If the run fails with a fallback-eligible reason (dep_missing /
+    # no_entrypoint), fall through to the next tier. All other run outcomes
+    # (success, OOM, timeout, NaN, generic non-zero exit) are accepted as final
+    # — we do not silently mask real reproduction problems with skeleton output.
+    tiers_def: list[tuple[str, callable]] = [
+        ("cache", lambda: _acquire_cache(cache_root, repo_url, code_dir)),
+        ("github_clone", lambda: _acquire_github_clone(repo_url, code_dir)),
+        ("template", lambda: _acquire_template(code_dir)),
+    ]
 
-    # --- Run ---
-    try:
-        entrypoint = _detect_entrypoint(code_dir)
-    except FileNotFoundError as exc:
-        _write_metrics(args.workspace, arxiv_id=plan.get("arxiv_id", ""),
-                       code_source=code_source, exit_code=-1,
-                       errors=[f"no_entrypoint: {exc}"])
+    tier_attempts: list[dict] = []
+    final_outcome: dict | None = None
+    final_tier_name: str = ""
+
+    for tier_name, acquire_fn in tiers_def:
+        # Clean code_dir for this tier attempt
+        if code_dir.exists():
+            shutil.rmtree(code_dir)
+        code_dir.mkdir(parents=True)
+
+        acquired, acquire_reason = acquire_fn()
+        if not acquired:
+            tier_attempts.append({"tier": tier_name, "outcome": "miss", "reason": acquire_reason})
+            continue
+
+        # Acquired. Try to run.
+        outcome = _run_one_tier(code_dir, plan, args.timeout, log_path)
+
+        eligible, fallback_reason = _is_fallback_eligible(outcome)
+        if eligible:
+            tier_attempts.append({"tier": tier_name,
+                                  "outcome": outcome["status"] if outcome["status"] != "ran" else "execution_failed",
+                                  "reason": fallback_reason})
+            continue
+
+        # Not eligible for fallback -- accept this outcome as the final result.
+        tier_attempts.append({"tier": tier_name, "outcome": "ran", "reason": "accepted"})
+        final_outcome = outcome
+        final_tier_name = tier_name
+        break
+
+    arxiv_id = plan.get("arxiv_id", "")
+
+    if final_outcome is None:
+        # All tiers exhausted without a finalisable outcome (e.g. every tier
+        # dep_missing'd). Use the last attempted tier as code_source so the
+        # comparator can still render a report (verdict will be execution_failed).
+        last_tier = tier_attempts[-1]["tier"] if tier_attempts else "unknown"
+        chain = " -> ".join(f"{a['tier']}({a['reason']})" for a in tier_attempts)
+        _write_metrics(
+            args.workspace,
+            arxiv_id=arxiv_id,
+            code_source=last_tier,
+            exit_code=-1,
+            final_metrics=None,
+            errors=[f"acquire_failed: all tiers exhausted: {chain}"],
+            tier_attempts=tier_attempts,
+        )
         return 0
 
-    env = _build_env(plan)
-    log_path = args.workspace / "logs" / "run.log"
-    started = time.time()
-    exit_code, stdout, run_errors = _run_subprocess(entrypoint, env, args.timeout, log_path)
-    elapsed = time.time() - started
-
-    final_metrics, curve = _parse_metrics(stdout)
-    failure_errors = _scan_for_failure_signals(stdout)
-    all_errors = run_errors + failure_errors
-
+    # Successful tier (or non-fallback-eligible failure such as timeout/OOM).
+    entrypoint = final_outcome["entrypoint"]
     _write_metrics(
         args.workspace,
-        arxiv_id=plan.get("arxiv_id", ""),
-        code_source=code_source,
+        arxiv_id=arxiv_id,
+        code_source=final_tier_name,
         code_path_in_workspace=str(entrypoint.parent.relative_to(args.workspace)),
-        wall_time_seconds=round(elapsed, 2),
-        exit_code=exit_code,
-        final_metrics=final_metrics or None,
-        training_curve=curve,
-        errors=all_errors,
+        wall_time_seconds=round(final_outcome["elapsed"], 2),
+        exit_code=final_outcome["exit_code"],
+        final_metrics=final_outcome["final_metrics"] or None,
+        training_curve=final_outcome["training_curve"],
+        errors=final_outcome["errors"],
+        tier_attempts=tier_attempts,
         warnings=[],
     )
 

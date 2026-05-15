@@ -78,3 +78,55 @@ def test_timeout_kills_subprocess(tmp_workspace, tmp_path):
     metrics = json.loads((tmp_workspace / "metrics.json").read_text())
     assert metrics["exit_code"] != 0
     assert any("timeout" in e.lower() for e in metrics["errors"])
+
+
+def test_dep_missing_falls_back_to_next_tier(tmp_workspace, tmp_path):
+    """Tier 1 acquires code but it fails with ModuleNotFoundError -> falls back to Tier 3.
+
+    This guards against the demo failure observed on 2026-05-13 where Tier 2
+    cloned the official tkipf/gcn (TensorFlow 1.x) which lacked sandbox deps.
+    Tier 2 'acquired' but couldn't run, so the old code reported execution_failed
+    instead of falling through to the PyTorch skeleton.
+    """
+    cache_root = tmp_path / "cache"
+    cache_root.mkdir()
+    (cache_root / "pygcn").mkdir()
+    # Tier 1 cache contains code that imports a nonexistent module
+    (cache_root / "pygcn" / "train.py").write_text(
+        "import this_module_does_not_exist_xyz\nprint('should never reach this line')\n",
+        encoding="utf-8",
+    )
+    _make_plan(tmp_workspace, code_repo_url=None)  # skip Tier 2 cleanly
+    result = _run(tmp_workspace, cache_dir=cache_root, timeout=30)
+
+    metrics = json.loads((tmp_workspace / "metrics.json").read_text())
+    # Tier 1 was tried but dep_missing -> fell back to Tier 3
+    # (Tier 3 template may itself fail with dep_missing if torch/torch_geometric
+    # are absent in the test environment; that's fine, we just need to see the
+    # tier chain was attempted.)
+    assert "tier_attempts" in metrics, "metrics.json must include tier_attempts after refactor"
+    attempts = metrics["tier_attempts"]
+    assert len(attempts) >= 2, f"expected fallback chain, got: {attempts}"
+    # First attempt: cache, dep_missing
+    assert attempts[0]["tier"] == "cache"
+    assert "dep_missing" in attempts[0]["reason"]
+    # Last attempt: template (whether it succeeds or also dep_missings is env-dependent)
+    assert attempts[-1]["tier"] == "template"
+    # Final code_source reflects the last tier attempted
+    assert metrics["code_source"] == "template"
+
+
+def test_no_entrypoint_falls_back_to_next_tier(tmp_workspace, tmp_path):
+    """Tier 1 acquires an empty directory (no train.py) -> falls back."""
+    cache_root = tmp_path / "cache"
+    cache_root.mkdir()
+    (cache_root / "pygcn").mkdir()  # empty dir, no entrypoint
+    _make_plan(tmp_workspace, code_repo_url=None)
+    result = _run(tmp_workspace, cache_dir=cache_root, timeout=30)
+    metrics = json.loads((tmp_workspace / "metrics.json").read_text())
+    assert "tier_attempts" in metrics
+    attempts = metrics["tier_attempts"]
+    assert attempts[0]["tier"] == "cache"
+    assert "no_entrypoint" in attempts[0]["reason"]
+    # Fell through to template
+    assert metrics["code_source"] == "template"
