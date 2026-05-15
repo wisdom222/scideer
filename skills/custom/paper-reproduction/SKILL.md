@@ -43,6 +43,22 @@ Trigger on any of:
 
 The skill works because the PDF is parsed exactly **once** by `extract_method.py`, and every downstream step consumes a JSON contract — never re-reading the paper. Your job as the agent is to glue the bash invocations together, not to substitute reasoning for any of them.
 
+## What You MUST NOT Do (hard prohibitions)
+
+These exist because of an observed regression on 2026-05-13 where an agent, after seeing `dep_missing` from the cloned official TF code, started running `pip install torch` and proposed to "write a PyTorch GCN implementation directly." That is exactly the hallucination this skill is designed to prevent: a hand-rolled "reproduction" is not a reproduction, no matter how plausible the code looks.
+
+1. **Do NOT install packages.** No `pip install`, `apt install`, `conda install`, `uv add`, or any other environment mutation. If the sandbox is missing a dependency, that is the **user's problem to fix** — surface it via the report and stop. The skill must not silently paper over a broken sandbox.
+
+2. **Do NOT write your own implementation of the paper's method.** Even if all three tiers (cache / github clone / template) fail to produce a usable result, you may not "help" by writing a from-scratch PyTorch / NumPy / sklearn version of the paper. That output would be a *plausible fabrication*, not a reproduction. The skill explicitly prefers a visible failure over a hidden hallucination.
+
+3. **Do NOT re-run any of the 5 scripts in modified form.** Specifically: do not call `run_experiment.py` again after a failure with hand-edited `repro_plan.json`, do not skip `scale_down.py`, do not pass altered CLI flags. If `run_experiment.py` fell through all tiers and emitted `execution_failed`, that is the answer — present it.
+
+4. **Do NOT interpret or soften the verdict.** If `comparison.json` says `execution_failed`, your message to the user must say so verbatim. Do not write things like "the skill almost worked" or "the result is approximately X" when the underlying script could not produce X.
+
+5. **Do NOT manually edit any of the JSON contracts** (`repro_plan.json` / `metrics.json` / `comparison.json`) to coerce a better verdict. These files are produced by the scripts; treat them as read-only after the producing script completes.
+
+**The only valid post-failure actions are:** run `comparator.py` (Phase 6), present the resulting `report.md` to the user verbatim, and tell them what action *they* should take (re-run with different `--target`, install missing sandbox deps, etc.). The skill is **defensively designed to fail visibly rather than succeed mysteriously** — preserve that property.
+
 ## Workflow
 
 ### Phase 1 — Plan (conversational, no script)
@@ -161,6 +177,8 @@ After acquisition, the script:
 
 **This script always writes `metrics.json` and always exits 0.** Even on subprocess failure (OOM / NaN / timeout / dep_missing), the script captures the failure cleanly. The `comparator.py` decides the verdict based on `exit_code` and `errors[]`.
 
+**Execution-failure fallback (schema 1.1+):** if a tier acquires code that fails to run for a fallback-eligible reason (`dep_missing` or `no_entrypoint`), `run_experiment.py` automatically falls through to the next tier. The chain of attempts is recorded in `metrics.json` `tier_attempts` array — e.g. `[{tier: "cache", outcome: "execution_failed", reason: "dep_missing"}, {tier: "template", outcome: "ran", reason: "accepted"}]`. **OOM / timeout / NaN do NOT trigger fallback** (the next tier would hit the same wall and would mask the real issue). When all three tiers fail dep_missing (e.g. the sandbox lacks PyTorch entirely), the script emits `code_source` = last attempted tier + an `acquire_failed: all tiers exhausted` error, and the comparator marks the verdict `execution_failed`. **The agent does not need to do anything special — just proceed to Phase 6.** Do not attempt to install missing deps yourself (see "What You MUST NOT Do" above).
+
 **Important contract for cached / cloned code:** the entrypoint MUST emit metrics in the sentinel format above. The bundled fake cache fixture and the template skeleton both follow this convention. If a github-cloned repo doesn't emit sentinels, `metrics.json` will have empty `final_metrics` and the comparator will mark `execution_failed`.
 
 ### Phase 6 — Compare and Report
@@ -219,13 +237,14 @@ This skill never silently fails. Every failure class produces a viewable `report
 | **F2** | PDF parse fails / paper.txt < 1KB | `download_paper.py` warning to stderr | Inspect paper.txt. If < 1KB, treat as F2: report "image-based PDF, manual transcription required." |
 | **F3** | Target absent from paper text | `extract_method.py` exit 2 | Re-prompt user (see Phase 3 failure handling). Do NOT proceed. |
 | **F4** | Hparam extraction returned `null` | `repro_plan.json` warnings | Continue, but the report's Method table will show `null` rows. The skeleton/cached code will use script defaults. |
-| **F5** | All 3 acquire tiers fail | `run_experiment.py` writes `code_source="template"` + `errors=["acquire_failed"]` | The comparator handles this — no extra agent action. |
+| **F5** | All 3 acquire+run tiers fail | `run_experiment.py` writes `code_source` = last tier + `errors=["acquire_failed: all tiers exhausted: ..."]` + full `tier_attempts` chain | The comparator handles this — no extra agent action. **Do NOT** try to install deps or write a manual reproduction. |
 | **F6** | Sandbox OOM | `run_experiment.py` greps `OutOfMemoryError` / `killed` in stdout | Same — the comparator labels `verdict=execution_failed`. |
 | **F7** | NaN / non-convergence | `run_experiment.py` greps `nan` in stdout | Same. |
 | **F8** | Timeout > 240s | `run_experiment.py` `subprocess.run(timeout=)` raises | Same. |
 | **F9** | Metric deviates beyond tolerance | `comparator.py` `verdict="deviated"` | The report includes an auto-generated "possible cause" hint. Show it to the user. |
+| **F10** | One tier dep_missing / no_entrypoint, fell back to next | `metrics.json` `tier_attempts` shows fall-through; final `code_source` is the tier that ran (or last attempted if all failed) | Automatic. No agent action. **Do NOT** patch the failed tier's environment yourself. |
 
-The agent is responsible for F1–F3 (early failures, before run_experiment). F4–F9 are handled by the scripts and the comparator — the agent just runs Phase 6 and presents the report.
+The agent is responsible for F1–F3 (early failures, before run_experiment). F4–F10 are handled by the scripts and the comparator — the agent just runs Phase 6 and presents the report.
 
 ## Examples
 
