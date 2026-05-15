@@ -149,7 +149,7 @@ export default function ChatPage() {
               <div
                 className={cn(
                   "relative w-full",
-                  isNewThread && "-translate-y-[calc(50vh-96px)]",
+                  isNewThread && "-translate-y-[calc(50vh-180px)]",
                   isNewThread
                     ? "max-w-3xl"
                     : "max-w-(--container-width-md)",
