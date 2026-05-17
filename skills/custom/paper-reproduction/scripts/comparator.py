@@ -21,7 +21,24 @@ def _percent(value: float | None, unit: str | None) -> float | None:
     return value  # already percent
 
 
-def _tolerance(code_source: str, scaled_hparams: dict | None) -> tuple[float, str]:
+def _epochs_actually_scaled(scaled_hparams: dict | None, original_epochs: int | None) -> bool:
+    """True only if scale_down.py produced an epochs_used STRICTLY LESS than original.
+
+    scale_down.py outputs `epochs_used` for every plan (small datasets like
+    Cora/Citeseer/Pubmed get `epochs_used == original` to skip halving).
+    Treating any non-None epochs_used as "scaled" produces false-positive
+    tolerance widening and a misleading "epochs scaled" report label.
+    """
+    if not scaled_hparams:
+        return False
+    epochs_used = scaled_hparams.get("epochs_used")
+    if epochs_used is None or original_epochs is None:
+        return False
+    return epochs_used < original_epochs
+
+
+def _tolerance(code_source: str, scaled_hparams: dict | None,
+               original_epochs: int | None = None) -> tuple[float, str]:
     base = 0.03
     notes = []
     if code_source == "cache":
@@ -36,7 +53,7 @@ def _tolerance(code_source: str, scaled_hparams: dict | None) -> tuple[float, st
     if sh.get("data_subset_size"):
         base = max(base, 0.08)
         notes.append("data subsample")
-    elif sh.get("epochs_used") is not None:
+    elif _epochs_actually_scaled(sh, original_epochs):
         base = max(base, 0.05)
         notes.append("epochs scaled")
 
@@ -121,9 +138,12 @@ def main() -> int:
     # Tolerance determination
     code_source = metrics.get("code_source", "cache")
     scaled = plan.get("scaled_hparams", {})
-    scale_down_applied = bool(scaled and (scaled.get("epochs_used") is not None or
-                                           scaled.get("data_subset_size")))
-    tol, tol_basis = _tolerance(code_source, scaled)
+    original_epochs = (plan.get("method") or {}).get("epochs")
+    scale_down_applied = bool(scaled and (
+        _epochs_actually_scaled(scaled, original_epochs)
+        or scaled.get("data_subset_size")
+    ))
+    tol, tol_basis = _tolerance(code_source, scaled, original_epochs)
 
     # Metric extraction
     target = plan["target"]

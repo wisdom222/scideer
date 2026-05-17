@@ -53,6 +53,22 @@ KNOWN_DATASETS = ["Cora", "Citeseer", "Pubmed", "MNIST", "FashionMNIST",
 KNOWN_MODELS = ["GCN", "GAT", "GraphSAGE", "Transformer", "BERT", "ResNet",
                 "VGG", "U-Net", "CNN", "MLP", "LSTM", "GRU"]
 
+# Reference-implementation defaults for well-known architectures. Used to fill
+# in fields the paper's body text omits or phrases in ways our regex can't
+# catch. Pulled from each model's canonical open-source reference repo, not
+# guessed: GCN -> tkipf/pygcn; GAT -> PetarV-/GAT. New entries should also
+# cite their authoritative source.
+KNOWN_ARCH_DEFAULTS: dict[str, dict] = {
+    "GCN": {
+        "epochs": 200, "learning_rate": 0.01, "hidden_dim": 16,
+        "dropout": 0.5, "weight_decay": 5e-4, "num_layers": 2,
+    },
+    "GAT": {
+        "epochs": 1000, "learning_rate": 0.005, "hidden_dim": 8,
+        "dropout": 0.6, "weight_decay": 5e-4, "num_layers": 2,
+    },
+}
+
 GITHUB_URL_PATTERN = re.compile(r"https?://github\.com/[\w\-]+/[\w\-\.]+")
 
 
@@ -128,6 +144,25 @@ def _verify_in_paper(text: str, value: float) -> tuple[bool, int, str]:
     return False, -1, ""
 
 
+def _apply_arch_defaults(method: dict, warnings: list[str]) -> None:
+    """Fill None hparams from KNOWN_ARCH_DEFAULTS when the architecture matches.
+
+    Modifies `method` in place. Appends a warning per filled field so the
+    final report makes clear which numbers came from regex vs reference
+    defaults (preserves the skill's "no silent fabrication" property).
+    """
+    arch = method.get("model_arch_hint")
+    defaults = KNOWN_ARCH_DEFAULTS.get(arch) if arch else None
+    if not defaults:
+        return
+    for key, default_value in defaults.items():
+        if method.get(key) is None:
+            method[key] = default_value
+            warnings.append(
+                f"{key}: regex miss, used {arch} reference default ({default_value})"
+            )
+
+
 def _grep_github_url(text: str) -> str | None:
     m = GITHUB_URL_PATTERN.search(text)
     if m:
@@ -168,6 +203,12 @@ def main() -> int:
     }
 
     warnings = []
+    # Fill regex misses from known-architecture reference defaults BEFORE
+    # surfacing "could not extract" warnings. _apply_arch_defaults appends
+    # its own "used <arch> reference default" warnings only for fields it
+    # actually filled, so the remaining loop only complains about fields
+    # that neither regex nor defaults could supply.
+    _apply_arch_defaults(method, warnings)
     for k in ["epochs", "learning_rate", "dataset", "model_arch_hint"]:
         if method[k] is None:
             warnings.append(f"could not extract {k} via regex; consider --method-override")

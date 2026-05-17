@@ -108,18 +108,58 @@ def _build_env(plan: dict) -> dict:
     return env
 
 
-def _run_subprocess(entrypoint: Path, env: dict, timeout: int, log_path: Path):
+def _probe_entrypoint_flags(entrypoint: Path, env: dict, timeout: int = 10) -> set[str]:
+    """Probe `python entrypoint --help` to discover supported CLI flags.
+
+    Returns a set of long-form flags (e.g. {"--epochs", "--lr", "--hidden"})
+    found in the help text. Empty set on probe failure (treated as "no
+    extra flags supported", so we fall back to env-var-only convention).
+    """
+    try:
+        result = subprocess.run(
+            [sys.executable, entrypoint.name, "--help"],
+            cwd=str(entrypoint.parent),
+            env=env,
+            capture_output=True, text=True, timeout=timeout,
+        )
+        help_text = (result.stdout or "") + (result.stderr or "")
+    except (subprocess.TimeoutExpired, OSError):
+        return set()
+    return set(re.findall(r"--[A-Za-z][A-Za-z0-9_\-]*", help_text))
+
+
+def _build_extra_argv(plan: dict, supported_flags: set[str]) -> list[str]:
+    """Construct extra CLI args to forward scale_down values via flags the
+    entrypoint actually supports. Env vars are still set as a parallel
+    channel, so this only fires for entrypoints that use argparse.
+    """
+    scaled = plan.get("scaled_hparams", {}) or {}
+    extra: list[str] = []
+    epochs_used = scaled.get("epochs_used")
+    if epochs_used is not None and "--epochs" in supported_flags:
+        extra.extend(["--epochs", str(epochs_used)])
+    return extra
+
+
+def _run_subprocess(entrypoint: Path, env: dict, timeout: int, log_path: Path,
+                    extra_argv: list[str] | None = None):
     """Run with timeout. Returns (exit_code, stdout_text, errors).
 
     Uses subprocess.run with a hard timeout. We sacrifice live log streaming
     (log written all at once at the end) for cross-platform timeout reliability:
     blocking readline() on Windows cannot be interrupted by a wall-clock check.
+
+    `extra_argv` lets callers forward CLI flags (e.g. ["--epochs", "5"]) that
+    are known to be supported by the entrypoint (via prior --help probe).
     """
     log_path.parent.mkdir(parents=True, exist_ok=True)
     errors: list[str] = []
+    cmd = [sys.executable, entrypoint.name]
+    if extra_argv:
+        cmd.extend(extra_argv)
     try:
         result = subprocess.run(
-            [sys.executable, entrypoint.name],
+            cmd,
             cwd=str(entrypoint.parent),
             env=env,
             capture_output=True,
@@ -248,8 +288,15 @@ def _run_one_tier(code_dir: Path, plan: dict, timeout: int, log_path: Path):
                 "errors": [f"no_entrypoint: {exc}"]}
 
     env = _build_env(plan)
+    # Probe entrypoint to discover supported flags, then forward scale_down
+    # values via CLI for entrypoints that use argparse (env vars stay set in
+    # parallel for entrypoints that follow SCIDEER_* convention).
+    supported_flags = _probe_entrypoint_flags(entrypoint, env)
+    extra_argv = _build_extra_argv(plan, supported_flags)
     started = time.time()
-    exit_code, stdout, run_errors = _run_subprocess(entrypoint, env, timeout, log_path)
+    exit_code, stdout, run_errors = _run_subprocess(
+        entrypoint, env, timeout, log_path, extra_argv=extra_argv,
+    )
     elapsed = time.time() - started
 
     final_metrics, curve = _parse_metrics(stdout)

@@ -130,3 +130,74 @@ def test_no_entrypoint_falls_back_to_next_tier(tmp_workspace, tmp_path):
     assert "no_entrypoint" in attempts[0]["reason"]
     # Fell through to template
     assert metrics["code_source"] == "template"
+
+
+def test_epochs_flag_passed_when_entrypoint_supports_it(tmp_workspace, tmp_path):
+    """run_experiment should pass --epochs <N> to entrypoints that accept it.
+
+    Regression: previously run_experiment only set SCIDEER_EPOCHS env var, but
+    many reference codebases (e.g. tkipf/pygcn) use argparse with their own
+    defaults and ignore env vars. The result: scale_down outputs `epochs_used`
+    that has no effect on actual training, breaking the scale-down contract.
+    """
+    cache_root = tmp_path / "cache"
+    cache_root.mkdir()
+    (cache_root / "pygcn").mkdir()
+    # Entrypoint that DOES accept --epochs and echoes the value it received.
+    (cache_root / "pygcn" / "train.py").write_text(
+        "import argparse\n"
+        "p = argparse.ArgumentParser()\n"
+        "p.add_argument('--epochs', type=int, default=200)\n"
+        "args = p.parse_args()\n"
+        "print(f'SKELETON_METRIC epochs_actually_run={args.epochs}', flush=True)\n"
+        "print(f'SKELETON_METRIC test_accuracy=0.5', flush=True)\n",
+        encoding="utf-8",
+    )
+    _make_plan(tmp_workspace,
+               scaled_hparams={"epochs_used": 7, "data_subset_size": None,
+                               "rationale": "halved epochs (200->7)"})
+    result = _run(tmp_workspace, cache_dir=cache_root, timeout=30)
+    assert result.returncode == 0, result.stderr
+
+    metrics = json.loads((tmp_workspace / "metrics.json").read_text())
+    assert metrics["exit_code"] == 0
+    # The entrypoint echoed back the value of --epochs it received.
+    # If run_experiment passed --epochs 7, this should be 7.
+    # If run_experiment only relied on env vars (the bug), the value would be 200.
+    assert metrics["final_metrics"]["epochs_actually_run"] == 7, (
+        "run_experiment.py should pass --epochs 7 to entrypoints that support it; "
+        f"entrypoint received default 200 instead, suggesting --epochs was not passed."
+    )
+
+
+def test_epochs_flag_skipped_when_entrypoint_rejects_it(tmp_workspace, tmp_path):
+    """If entrypoint doesn't accept --epochs (argparse would reject), skip it.
+
+    Pre-probe via --help should detect the absence and not pass --epochs.
+    Falls back to env-var convention (entrypoint uses its own default).
+    """
+    cache_root = tmp_path / "cache"
+    cache_root.mkdir()
+    (cache_root / "pygcn").mkdir()
+    # Entrypoint that does NOT take --epochs. If run_experiment naively passes
+    # --epochs, argparse will exit with 2 and the test fails.
+    (cache_root / "pygcn" / "train.py").write_text(
+        "import argparse\n"
+        "p = argparse.ArgumentParser()\n"
+        "p.add_argument('--steps', type=int, default=42)\n"  # NOT --epochs
+        "args = p.parse_args()\n"
+        "print(f'SKELETON_METRIC test_accuracy=0.5', flush=True)\n",
+        encoding="utf-8",
+    )
+    _make_plan(tmp_workspace,
+               scaled_hparams={"epochs_used": 7, "data_subset_size": None,
+                               "rationale": "halved"})
+    result = _run(tmp_workspace, cache_dir=cache_root, timeout=30)
+
+    metrics = json.loads((tmp_workspace / "metrics.json").read_text())
+    # Entrypoint should have run cleanly (no argparse rejection). exit_code=0.
+    assert metrics["exit_code"] == 0, (
+        f"Entrypoint without --epochs flag should still run; got exit_code="
+        f"{metrics['exit_code']} with errors={metrics.get('errors')}"
+    )
+    assert metrics["final_metrics"]["test_accuracy"] == 0.5

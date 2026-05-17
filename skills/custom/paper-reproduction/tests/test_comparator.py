@@ -132,3 +132,69 @@ def test_comparator_subsample_tolerance(tmp_workspace, write_json, tmp_path):
     result = _run(tmp_workspace, output)
     cmp = json.loads((output / "comparison.json").read_text())
     assert cmp["tolerance_used"] == 0.08  # cache + subsample
+
+
+def test_comparator_no_scale_when_epochs_unchanged(tmp_workspace, write_json, tmp_path):
+    """If scaled_hparams.epochs_used == method.epochs, NO actual scaling happened.
+
+    Regression: comparator previously treated `epochs_used is not None` as
+    proof of scaling, even when the value equalled the original (which is what
+    scale_down.py outputs for small datasets like Cora/Citeseer/Pubmed where
+    no halving is needed). That produced a false "cache + epochs scaled"
+    tolerance basis and `scale_down_applied=True`.
+
+    Expected: tolerance basis = "cache" (no "+ epochs scaled"), tolerance
+    band = 3% (cache base, not 5%), and `scale_down_applied=False`.
+    """
+    output = tmp_path / "out"
+    output.mkdir()
+    # method.epochs == scaled_hparams.epochs_used == 200 -- no real scaling
+    _make_plan(tmp_workspace, write_json,
+               method={"model_arch_hint": "GCN", "dataset": "Cora",
+                       "epochs": 200, "learning_rate": 0.01},
+               scaled_hparams={"epochs_used": 200, "data_subset_size": None,
+                               "rationale": "no scaling needed"})
+    _make_metrics(tmp_workspace, write_json,
+                  final_metrics={"test_accuracy": 0.83, "test_accuracy_unit": "fraction",
+                                 "epochs_actually_run": 200})
+    result = _run(tmp_workspace, output)
+    assert result.returncode == 0, result.stderr
+    cmp = json.loads((output / "comparison.json").read_text())
+    assert cmp["scale_down_applied"] is False, (
+        f"epochs_used (200) == method.epochs (200) should NOT count as scaled, "
+        f"got scale_down_applied={cmp['scale_down_applied']}"
+    )
+    assert cmp["tolerance_basis"] == "cache", (
+        f"tolerance_basis should be just 'cache' when no real scaling, "
+        f"got {cmp['tolerance_basis']!r}"
+    )
+    assert cmp["tolerance_used"] == 0.03, (
+        f"tolerance band should be 3% (cache base), got {cmp['tolerance_used']}"
+    )
+    # Verdict should still be within_tolerance (delta 1.5pp / 81.5 = 1.8% < 3%)
+    assert cmp["verdict"] == "within_tolerance"
+
+
+def test_comparator_scale_when_epochs_actually_reduced(tmp_workspace, write_json, tmp_path):
+    """If scaled_hparams.epochs_used < method.epochs, scaling DID happen.
+
+    Counterpart to test_comparator_no_scale_when_epochs_unchanged: ensures the
+    fix doesn't accidentally suppress the "scaled" flag when it should fire.
+    """
+    output = tmp_path / "out"
+    output.mkdir()
+    # method.epochs=200, epochs_used=100 -- real halving happened
+    _make_plan(tmp_workspace, write_json,
+               method={"model_arch_hint": "ResNet", "dataset": "CIFAR-10",
+                       "epochs": 200, "learning_rate": 0.1},
+               scaled_hparams={"epochs_used": 100, "data_subset_size": None,
+                               "rationale": "halved epochs (200->100)"})
+    _make_metrics(tmp_workspace, write_json,
+                  final_metrics={"test_accuracy": 0.80, "test_accuracy_unit": "fraction",
+                                 "epochs_actually_run": 100})
+    result = _run(tmp_workspace, output)
+    assert result.returncode == 0
+    cmp = json.loads((output / "comparison.json").read_text())
+    assert cmp["scale_down_applied"] is True
+    assert "epochs scaled" in cmp["tolerance_basis"]
+    assert cmp["tolerance_used"] == 0.05  # cache + epochs scaled -> 5%
