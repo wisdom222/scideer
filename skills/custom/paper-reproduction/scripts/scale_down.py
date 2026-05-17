@@ -19,11 +19,16 @@ SUBSAMPLE_SIZE = 10000
 MIN_EPOCHS = 10
 
 
-def _scale_epochs(original: int | None) -> int | None:
+def _scale_epochs(original: int | None, dataset: str | None = None) -> int | None:
     if original is None:
         return None
     if not isinstance(original, int) or isinstance(original, bool):
         return None
+    # Small graph datasets (Cora/Citeseer/Pubmed) train in <5s on CPU at full
+    # 200 epochs — halving them just hurts convergence without saving runtime.
+    # Mirrors _scale_data() logic so both axes of scaling respect SMALL_DATASETS.
+    if dataset in SMALL_DATASETS:
+        return original
     return max(MIN_EPOCHS, original // 2)
 
 
@@ -35,8 +40,8 @@ def _scale_data(dataset: str | None) -> int | None:
 
 def scale(plan: dict) -> dict:
     method = plan.get("method", {})
-    epochs_used = _scale_epochs(method.get("epochs"))
     dataset = method.get("dataset")
+    epochs_used = _scale_epochs(method.get("epochs"), dataset)
     subset = _scale_data(dataset)
     rationale_parts = []
     if epochs_used is not None and epochs_used != method.get("epochs"):

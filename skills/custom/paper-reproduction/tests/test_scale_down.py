@@ -19,10 +19,18 @@ def _run_scale_down(workspace: Path) -> subprocess.CompletedProcess:
 
 
 def test_scale_down_halves_epochs(tmp_workspace, write_json):
+    """Halving rule still applies for non-small datasets.
+
+    NOTE: this test used to use dataset=Cora and assert epochs_used==100, but
+    scale_down.py now skips halving for SMALL_DATASETS (Cora/Citeseer/Pubmed)
+    because they train in <5s on CPU at full epochs. Use ImageNet here to
+    exercise the halving branch; see test_scale_down_keeps_small_dataset_epochs
+    for the small-dataset path.
+    """
     plan = {
         "schema_version": "1.0",
-        "arxiv_id": "1609.02907",
-        "method": {"epochs": 200, "dataset": "Cora"},
+        "arxiv_id": "1512.03385",
+        "method": {"epochs": 200, "dataset": "ImageNet"},
     }
     write_json(tmp_workspace / "repro_plan.json", plan)
 
@@ -31,7 +39,34 @@ def test_scale_down_halves_epochs(tmp_workspace, write_json):
     assert result.returncode == 0, result.stderr
     out = json.loads((tmp_workspace / "repro_plan.json").read_text())
     assert out["scaled_hparams"]["epochs_used"] == 100
-    assert out["scaled_hparams"]["data_subset_size"] is None
+    assert out["scaled_hparams"]["data_subset_size"] == 10000
+
+
+def test_scale_down_keeps_small_dataset_epochs(tmp_workspace, write_json):
+    """SMALL_DATASETS (Cora/Citeseer/Pubmed) keep original epochs unscaled.
+
+    Regression: scale-down used to always halve epochs regardless of dataset.
+    For tiny graph datasets that train in seconds, halving just hurts
+    convergence (e.g. GCN/Cora at 100 epochs got 77%, at 200 epochs got 83%)
+    without saving any meaningful wall-clock budget.
+    """
+    for dataset in ("Cora", "Citeseer", "Pubmed"):
+        plan = {"method": {"epochs": 200, "dataset": dataset}}
+        write_json(tmp_workspace / "repro_plan.json", plan)
+
+        result = _run_scale_down(tmp_workspace)
+
+        assert result.returncode == 0, result.stderr
+        out = json.loads((tmp_workspace / "repro_plan.json").read_text())
+        assert out["scaled_hparams"]["epochs_used"] == 200, (
+            f"{dataset}: expected epochs_used=200 (no halving for small datasets), "
+            f"got {out['scaled_hparams']['epochs_used']}"
+        )
+        assert out["scaled_hparams"]["data_subset_size"] is None
+        assert "no scaling needed" in out["scaled_hparams"]["rationale"].lower(), (
+            f"{dataset}: rationale should say 'no scaling needed' when nothing was scaled, "
+            f"got {out['scaled_hparams']['rationale']!r}"
+        )
 
 
 def test_scale_down_floors_at_min(tmp_workspace, write_json):
