@@ -170,6 +170,66 @@ def test_epochs_flag_passed_when_entrypoint_supports_it(tmp_workspace, tmp_path)
     )
 
 
+def test_pythonpath_lets_packaged_repo_import_sibling_module(tmp_workspace, tmp_path):
+    """Reference repos like tkipf/pygcn use `from pygcn.utils import load_data`,
+    which only works if the *package root* (pygcn/, the parent of pygcn/pygcn/
+    where train.py lives) is on PYTHONPATH. Without this, every Tier-1 run
+    against a packaged reference repo dep_missing's.
+
+    Regression: previously _run_subprocess only set cwd=entrypoint.parent
+    (i.e. pygcn/pygcn/), so `import pygcn` failed because pygcn/ itself
+    wasn't on sys.path. Fix: inject entrypoint.parent + parent.parent +
+    parent.parent.parent into PYTHONPATH.
+    """
+    cache_root = tmp_path / "cache"
+    # Mimic tkipf/pygcn layout: cache_root/pygcn/pygcn/{train.py,utils.py}
+    pkg_root = cache_root / "pygcn"
+    pkg_inner = pkg_root / "pygcn"
+    pkg_inner.mkdir(parents=True)
+    (pkg_inner / "__init__.py").write_text("", encoding="utf-8")
+    (pkg_inner / "utils.py").write_text(
+        "def load_data():\n    return 'cora-data'\n", encoding="utf-8",
+    )
+    (pkg_inner / "train.py").write_text(
+        "from pygcn.utils import load_data\n"
+        "data = load_data()\n"
+        "print(f'SKELETON_METRIC test_accuracy=0.7', flush=True)\n",
+        encoding="utf-8",
+    )
+    _make_plan(tmp_workspace)
+    result = _run(tmp_workspace, cache_dir=cache_root, timeout=30)
+
+    metrics = json.loads((tmp_workspace / "metrics.json").read_text())
+    assert metrics["exit_code"] == 0, (
+        f"packaged import should resolve via PYTHONPATH injection; "
+        f"got exit_code={metrics['exit_code']}, errors={metrics.get('errors')}"
+    )
+    assert metrics["final_metrics"]["test_accuracy"] == 0.7
+
+
+def test_run_history_log_preserves_per_tier_output(tmp_workspace, tmp_path):
+    """When a tier falls through, the next tier's stdout overwrites run.log.
+    run_history.log appends so debug-after-the-fact retains every tier's
+    output. Triggers cache(dep_missing) -> template fallback chain.
+    """
+    cache_root = tmp_path / "cache"
+    cache_root.mkdir()
+    (cache_root / "pygcn").mkdir()
+    (cache_root / "pygcn" / "train.py").write_text(
+        "import this_module_does_not_exist_xyz\n", encoding="utf-8",
+    )
+    _make_plan(tmp_workspace, code_repo_url=None)
+    result = _run(tmp_workspace, cache_dir=cache_root, timeout=30)
+
+    history = (tmp_workspace / "logs" / "run_history.log")
+    assert history.exists(), "run_history.log should be created on tier execution"
+    history_text = history.read_text(encoding="utf-8")
+    # Both attempts (cache + template) should have left a banner each.
+    assert history_text.count("=== TIER ATTEMPT") >= 2, (
+        f"expected >=2 tier banners in run_history.log, got: {history_text[:500]}"
+    )
+
+
 def test_epochs_flag_skipped_when_entrypoint_rejects_it(tmp_workspace, tmp_path):
     """If entrypoint doesn't accept --epochs (argparse would reject), skip it.
 

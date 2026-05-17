@@ -153,6 +153,21 @@ def _run_subprocess(entrypoint: Path, env: dict, timeout: int, log_path: Path,
     are known to be supported by the entrypoint (via prior --help probe).
     """
     log_path.parent.mkdir(parents=True, exist_ok=True)
+
+    # Make packaged repos (e.g. pygcn) importable without `pip install -e .`.
+    # Adds entrypoint's dir + parent + grandparent to PYTHONPATH so
+    # `from pygcn.utils import load_data` works when train.py lives at
+    # pygcn/pygcn/train.py and the package root is pygcn/. Don't mutate the
+    # caller's env dict.
+    env = dict(env)
+    pp_paths = [
+        str(entrypoint.parent),
+        str(entrypoint.parent.parent),
+        str(entrypoint.parent.parent.parent),
+    ]
+    existing_pp = env.get("PYTHONPATH", "")
+    env["PYTHONPATH"] = os.pathsep.join(pp_paths + ([existing_pp] if existing_pp else []))
+
     errors: list[str] = []
     cmd = [sys.executable, entrypoint.name]
     if extra_argv:
@@ -168,6 +183,13 @@ def _run_subprocess(entrypoint: Path, env: dict, timeout: int, log_path: Path,
         )
         stdout = (result.stdout or "") + (result.stderr or "")
         log_path.write_text(stdout, encoding="utf-8")
+        # Also append to history log so per-tier failures don't get clobbered
+        # by the next tier's stdout (useful when debugging fall-through chains).
+        history_path = log_path.parent / "run_history.log"
+        with history_path.open("a", encoding="utf-8") as f:
+            f.write(f"\n=== TIER ATTEMPT (exit={result.returncode}) ===\n")
+            f.write(stdout)
+            f.write("\n=== END ===\n")
         return result.returncode, stdout, errors
     except subprocess.TimeoutExpired as exc:
         # Capture whatever output was produced before the kill.
